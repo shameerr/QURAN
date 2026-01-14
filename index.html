@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quran Reader</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Google Fonts: Arabic, Malayalam, fallback English/UI fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Merriweather:wght@300;400;700&family=Poppins:wght@300;400;600&family=Scheherazade+New:wght@400;700&family=Manjari:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f5f5;
+      --card-bg: #ffffff;
+      --text: #222222;
+      --subtext: #555555;
+      --accent: #1f7a8c;
+      --accent-soft: #e0f4f7;
+    }
+
+    body.dark {
+      --bg: #0f172a;
+      --card-bg: #020617;
+      --text: #e5e7eb;
+      --subtext: #9ca3af;
+      --accent: #38bdf8;
+      --accent-soft: #082f49;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      /* Aptos first (if installed on Windows), then Poppins, etc. */
+      font-family: "Aptos", "Poppins", system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 18px;
+      box-shadow: 0 14px 40px rgba(15, 23, 42, 0.2);
+      padding: 24px 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      gap: 12px;
+    }
+
+    .title-group h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .title-group p {
+      font-size: 0.85rem;
+      color: var(--subtext);
+      margin-top: 4px;
+    }
+
+    .status {
+      font-size: 0.8rem;
+      color: var(--subtext);
+      margin-top: 4px;
+      min-height: 18px;
+    }
+
+    .dark-toggle {
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: transparent;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text);
+    }
+
+    .dark-toggle span.icon {
+      font-size: 1rem;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--subtext);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    select {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: transparent;
+      color: var(--text);
+      font-size: 0.85rem;
+      outline: none;
+      min-width: 220px;
+    }
+
+    .surah-header {
+      border-radius: 14px;
+      padding: 12px 14px;
+      background: var(--accent-soft);
+      margin-bottom: 14px;
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .surah-header.visible {
+      display: flex;
+    }
+
+    .surah-main {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .surah-main h2 {
+      font-size: 1.1rem;
+    }
+
+    .surah-main p {
+      font-size: 0.8rem;
+      color: var(--subtext);
+    }
+
+    .surah-badge {
+      font-size: 0.75rem;
+      border-radius: 999px;
+      padding: 4px 10px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .bismillah {
+      text-align: center;
+      font-size: 1.1rem;
+      margin: 12px 0 6px;
+      font-weight: 600;
+      display: none;
+      font-family: "Scheherazade New", "Amiri", serif;
+    }
+
+    .bismillah.visible {
+      display: block;
+    }
+
+    .verses {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding-right: 6px;
+      scroll-behavior: smooth;
+    }
+
+    .verse {
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(148, 163, 184, 0.06);
+      margin-bottom: 4px;
+    }
+
+    body.dark .verse {
+      background: rgba(15, 23, 42, 0.7);
+      border-color: rgba(148, 163, 184, 0.35);
+    }
+
+    .verse-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .ayah-number {
+      font-size: 0.7rem;
+      border-radius: 999px;
+      padding: 2px 8px;
+      background: rgba(148, 163, 184, 0.18);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .play-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #e0f2fe;
+      color: #0f172a;
+    }
+
+    body.dark .play-btn {
+      background: #0f172a;
+      color: #e5e7eb;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    .play-btn span.icon {
+      font-size: 0.8rem;
+    }
+
+    .ayah-arabic {
+      font-family: "Scheherazade New", "Amiri", serif;
+      direction: rtl;
+      text-align: right;
+      font-size: 1.2rem;
+      margin-top: 2px;
+      line-height: 1.9;
+    }
+
+    .ayah-block {
+      margin-top: 6px;
+    }
+
+    .ayah-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--subtext);
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* English translation block – Aptos focus */
+    .ayah-block-en .ayah-translation {
+      font-family: "Aptos", "Merriweather", "Times New Roman", serif;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* Malayalam translation block */
+    .ayah-block-ml .ayah-translation {
+      font-family: "Manjari", "Rachana", serif;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .ayah-tafsir {
+      margin-top: 6px;
+      font-size: 0.8rem;
+    }
+
+    .ayah-tafsir summary {
+      cursor: pointer;
+      list-style: none;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .ayah-tafsir summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .ayah-tafsir-content {
+      margin-top: 4px;
+      line-height: 1.7;
+      font-size: 0.85rem;
+      font-family: "Manjari", "Rachana", serif;
+    }
+
+    .source-note {
+      font-size: 0.7rem;
+      color: var(--subtext);
+      margin-top: 4px;
+    }
+
+    /* Audio bar at bottom */
+    .audio-bar {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: rgba(148, 163, 184, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    body.dark .audio-bar {
+      background: rgba(15, 23, 42, 0.8);
+      border-color: rgba(148, 163, 184, 0.5);
+    }
+
+    .audio-info {
+      font-size: 0.8rem;
+      color: var(--subtext);
+    }
+
+    audio {
+      width: 100%;
+    }
+
+    @media (max-width: 640px) {
+      .card {
+        padding: 18px 14px;
+      }
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .surah-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card">
+      <header>
+        <div class="title-group">
+          <h1>Quran Reader</h1>
+          <p>Arabic + English (Aptos) + Malayalam translation & Malayalam tafseer.</p>
+          <div class="status" id="status"></div>
+        </div>
+        <button id="darkToggle" class="dark-toggle">
+          <span class="icon">🌙</span>
+          <span>Dark mode</span>
+        </button>
+      </header>
+
+      <div class="controls">
+        <div>
+          <label for="surahSelect">Choose a Surah</label><br />
+          <select id="surahSelect">
+            <option value="">Loading surahs...</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="surahHeader" class="surah-header">
+        <div class="surah-main">
+          <h2 id="surahName"></h2>
+          <p id="surahMeta"></p>
+          <p class="source-note">
+            Arabic & English & Malayalam translation: AlQuran Cloud · Malayalam tafseer: QuranEnc (Mukhtasar) · Audio: Mishary Alafasy
+          </p>
+        </div>
+        <div class="surah-badge" id="surahBadge"></div>
+      </div>
+
+      <div id="bismillah" class="bismillah">
+        بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+      </div>
+
+      <div id="verses" class="verses"></div>
+
+      <!-- Global audio player -->
+      <div id="audioBar" class="audio-bar">
+        <div id="audioInfo" class="audio-info">
+          Tap a play button next to any ayah to listen to the recitation (Mishary Alafasy).
+        </div>
+        <audio id="audioPlayer" controls></audio>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Text API: Arabic/English/Malayalam from AlQuran Cloud
+    const API_BASE = "https://api.alquran.cloud/v1";
+    // Malayalam tafseer (Mukhtasar) from QuranEnc
+    const ML_TAFSEER_URL_BASE =
+      "https://quranenc.com/api/v1/translation/sura/malayalam_mokhtasar";
+    // Audio CDN: Mishary Alafasy, by global ayah number
+    // Pattern: https://cdn.islamic.network/quran/audio/128/ar.alafasy/{ayahNumber}.mp3
+
+    const surahSelect = document.getElementById("surahSelect");
+    const surahHeader = document.getElementById("surahHeader");
+    const surahNameEl = document.getElementById("surahName");
+    const surahMetaEl = document.getElementById("surahMeta");
+    const surahBadgeEl = document.getElementById("surahBadge");
+    const versesContainer = document.getElementById("verses");
+    const bismillahEl = document.getElementById("bismillah");
+    const darkToggle = document.getElementById("darkToggle");
+    const statusEl = document.getElementById("status");
+    const audioPlayer = document.getElementById("audioPlayer");
+    const audioInfo = document.getElementById("audioInfo");
+
+    function setStatus(message) {
+      statusEl.textContent = message || "";
+    }
+
+    async function fetchSurahList() {
+      try {
+        setStatus("Loading surahs...");
+        const res = await fetch(API_BASE + "/surah");
+        const data = await res.json();
+        if (data.code !== 200) throw new Error("API error");
+
+        const surahs = data.data;
+        surahSelect.innerHTML =
+          '<option value="">-- Select a surah --</option>';
+
+        surahs.forEach((s) => {
+          const option = document.createElement("option");
+          option.value = s.number; // use surah number
+          option.textContent =
+            s.number + ". " + s.englishName + " (" + s.name + ")";
+          surahSelect.appendChild(option);
+        });
+
+        setStatus("Surahs loaded. Choose one from the list.");
+      } catch (err) {
+        console.error(err);
+        setStatus(
+          "Could not load surah list. Please check your internet connection."
+        );
+        surahSelect.innerHTML =
+          '<option value="">Error loading surahs</option>';
+      }
+    }
+
+    async function fetchSurahDetails(surahNumber) {
+      if (!surahNumber) return;
+      try {
+        setStatus("Loading surah " + surahNumber + "...");
+
+        // 1) Arabic + English + Malayalam translation from AlQuran Cloud
+        const editionsUrl =
+          API_BASE +
+          "/surah/" +
+          surahNumber +
+          "/editions/quran-uthmani,en.sahih,ml.abdulhameed";
+
+        const [multiRes, mlTafRes] = await Promise.all([
+          fetch(editionsUrl),
+          // 2) Malayalam tafseer (Mukhtasar) from QuranEnc
+          fetch(ML_TAFSEER_URL_BASE + "/" + surahNumber).catch(() => null),
+        ]);
+
+        const multiData = await multiRes.json();
+        if (multiData.code !== 200) {
+          throw new Error("Arabic/English/Malayalam translation API error");
+        }
+
+        const editions = multiData.data;
+
+        const arabic = editions.find(
+          (e) => e.edition.identifier === "quran-uthmani"
+        );
+        const english = editions.find(
+          (e) => e.edition.identifier === "en.sahih"
+        );
+        const malayalamTrans = editions.find(
+          (e) => e.edition.identifier === "ml.abdulhameed"
+        );
+
+        if (!arabic || !english) {
+          throw new Error("Missing Arabic or English edition");
+        }
+
+        // Malayalam tafseer (Mukhtasar) array
+        let mlTafseerAyahs = [];
+        if (mlTafRes && mlTafRes.ok) {
+          const mlTafJson = await mlTafRes.json();
+          if (mlTafJson && Array.isArray(mlTafJson.result)) {
+            mlTafseerAyahs = mlTafJson.result;
+          }
+        }
+
+        // Header info (use English)
+        const name = english.englishName;
+        const arabicName = arabic.name;
+        const type = english.revelationType;
+        const ayahCount = english.numberOfAyahs;
+
+        surahHeader.classList.add("visible");
+        surahNameEl.textContent = name + " · " + arabicName;
+        surahMetaEl.textContent = type + " · " + ayahCount + " verses";
+        surahBadgeEl.textContent = "Surah " + surahNumber;
+
+        // Bismillah for all except 1 and 9
+        if (surahNumber !== "1" && surahNumber !== "9") {
+          bismillahEl.classList.add("visible");
+        } else {
+          bismillahEl.classList.remove("visible");
+        }
+
+        // Build verses
+        versesContainer.innerHTML = "";
+
+        const arAyahs = arabic.ayahs;
+        const enAyahs = english.ayahs;
+        const mlAyahs = malayalamTrans ? malayalamTrans.ayahs : [];
+
+        for (let i = 0; i < arAyahs.length; i++) {
+          const arAyah = arAyahs[i];
+          const enAyah = enAyahs[i];
+          const mlAyah = mlAyahs[i];
+
+          // Match Malayalam tafseer by aya number (safer than just index)
+          let mlTafObj = null;
+          if (mlTafseerAyahs.length > 0) {
+            mlTafObj = mlTafseerAyahs.find(
+              (item) => Number(item.aya) === arAyah.numberInSurah
+            );
+          }
+
+          const verseEl = document.createElement("div");
+          verseEl.className = "verse";
+
+          const verseTop = document.createElement("div");
+          verseTop.className = "verse-top";
+
+          const ayahNumber = document.createElement("div");
+          ayahNumber.className = "ayah-number";
+          ayahNumber.textContent = "Ayah " + arAyah.numberInSurah;
+
+          // Play button for this ayah
+          const playBtn = document.createElement("button");
+          playBtn.className = "play-btn";
+          playBtn.innerHTML = '<span class="icon">▶</span><span>Play</span>';
+
+          playBtn.addEventListener("click", () => {
+            const globalAyahNumber = arAyah.number; // overall ayah index
+            const audioUrl =
+              "https://cdn.islamic.network/quran/audio/128/ar.alafasy/" +
+              globalAyahNumber +
+              ".mp3";
+            audioPlayer.src = audioUrl;
+            audioPlayer
+              .play()
+              .then(() => {
+                audioInfo.textContent =
+                  "Playing Surah " +
+                  surahNumber +
+                  ", Ayah " +
+                  arAyah.numberInSurah +
+                  " – Mishary Alafasy.";
+              })
+              .catch(() => {
+                audioInfo.textContent =
+                  "Unable to auto play. Press play on the audio bar below.";
+              });
+          });
+
+          verseTop.appendChild(ayahNumber);
+          verseTop.appendChild(playBtn);
+          verseEl.appendChild(verseTop);
+
+          const arabicEl = document.createElement("div");
+          arabicEl.className = "ayah-arabic";
+          arabicEl.textContent = arAyah.text;
+          verseEl.appendChild(arabicEl);
+
+          // English block
+          if (enAyah && enAyah.text) {
+            const blockEn = document.createElement("div");
+            blockEn.className = "ayah-block ayah-block-en";
+
+            const labelEn = document.createElement("div");
+            labelEn.className = "ayah-label";
+            labelEn.textContent = "English";
+
+            const textEn = document.createElement("div");
+            textEn.className = "ayah-translation";
+            textEn.textContent = enAyah.text;
+
+            blockEn.appendChild(labelEn);
+            blockEn.appendChild(textEn);
+            verseEl.appendChild(blockEn);
+          }
+
+          // Malayalam translation (simple)
+          if (mlAyah && mlAyah.text) {
+            const blockMl = document.createElement("div");
+            blockMl.className = "ayah-block ayah-block-ml";
+
+            const labelMl = document.createElement("div");
+            labelMl.className = "ayah-label";
+            labelMl.textContent = "Malayalam (translation)";
+
+            const textMl = document.createElement("div");
+            textMl.className = "ayah-translation";
+            textMl.textContent = mlAyah.text;
+
+            blockMl.appendChild(labelMl);
+            blockMl.appendChild(textMl);
+            verseEl.appendChild(blockMl);
+          }
+
+          // Malayalam tafseer (Mukhtasar) – collapsible
+          if (mlTafObj && mlTafObj.translation) {
+            const tafsirDetails = document.createElement("details");
+            tafsirDetails.className = "ayah-tafsir";
+
+            const summary = document.createElement("summary");
+            summary.textContent = "Show Malayalam tafseer (Mukhtasar)";
+
+            const tafsirContent = document.createElement("div");
+            tafsirContent.className = "ayah-tafsir-content";
+            tafsirContent.textContent = mlTafObj.translation;
+
+            tafsirDetails.appendChild(summary);
+            tafsirDetails.appendChild(tafsirContent);
+            verseEl.appendChild(tafsirDetails);
+          }
+
+          versesContainer.appendChild(verseEl);
+        }
+
+        setStatus("Loaded: Surah " + surahNumber + " – " + name);
+      } catch (err) {
+        console.error(err);
+        setStatus("Could not load this surah. Please try again.");
+      }
+    }
+
+    function initDarkMode() {
+      const saved = localStorage.getItem("quranAppTheme");
+      if (saved === "dark") {
+        document.body.classList.add("dark");
+      }
+
+      darkToggle.addEventListener("click", () => {
+        document.body.classList.toggle("dark");
+        const isDark = document.body.classList.contains("dark");
+        localStorage.setItem("quranAppTheme", isDark ? "dark" : "light");
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initDarkMode();
+      fetchSurahList();
+
+      surahSelect.addEventListener("change", (e) => {
+        const surahNumber = e.target.value;
+        versesContainer.innerHTML = "";
+        audioPlayer.removeAttribute("src");
+        audioInfo.textContent =
+          "Tap a play button next to any ayah to listen to the recitation (Mishary Alafasy).";
+
+        if (!surahNumber) {
+          surahHeader.classList.remove("visible");
+          bismillahEl.classList.remove("visible");
+          setStatus("Please choose a surah.");
+          return;
+        }
+        fetchSurahDetails(surahNumber);
+      });
+    });
+  </script>
+</body>
+</html>
