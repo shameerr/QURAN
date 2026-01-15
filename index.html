@@ -4,684 +4,1119 @@
   <meta charset="UTF-8" />
   <title>Quran Reader</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Google Fonts: Arabic, Malayalam, fallback English/UI fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Merriweather:wght@300;400;700&family=Poppins:wght@300;400;600&family=Scheherazade+New:wght@400;700&family=Manjari:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Fonts (Arabic + Malayalam + UI fallback). Aptos will be used if installed on your device. -->
+  <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Poppins:wght@300;400;600&family=Scheherazade+New:wght@400;700&family=Manjari:wght@400;700&display=swap" rel="stylesheet">
+
   <style>
-    :root {
-      --bg: #f5f5f5;
-      --card-bg: #ffffff;
-      --text: #222222;
-      --subtext: #555555;
-      --accent: #1f7a8c;
-      --accent-soft: #e0f4f7;
+    :root{
+      --bg:#f5f5f5; --card:#ffffff; --text:#1f2937; --sub:#6b7280;
+      --accent:#1f7a8c; --accentSoft:#e0f4f7; --border:rgba(148,163,184,.25);
+      --shadow:0 14px 40px rgba(15, 23, 42, 0.18);
+      --page:#fffaf0;
     }
 
-    body.dark {
-      --bg: #0f172a;
-      --card-bg: #020617;
-      --text: #e5e7eb;
-      --subtext: #9ca3af;
-      --accent: #38bdf8;
-      --accent-soft: #082f49;
+    /* Nice background themes (light) */
+    body.bg-sand{ --bg:#fbf7ef; --accentSoft:#f3ead7; --page:#fff8e7; }
+    body.bg-mint{ --bg:#f3fbf7; --accentSoft:#dbf3e6; --page:#f6fffb; }
+    body.bg-sky{  --bg:#f3f8ff; --accentSoft:#dbeafe; --page:#f7fbff; }
+    body.bg-rose{ --bg:#fff5f7; --accentSoft:#ffe4ea; --page:#fff7f9; }
+
+    /* Dark mode overrides */
+    body.dark{
+      --bg:#0f172a; --card:#020617; --text:#e5e7eb; --sub:#9ca3af;
+      --accent:#38bdf8; --accentSoft:#082f49; --border:rgba(148,163,184,.4);
+      --shadow:0 14px 40px rgba(0,0,0,.35);
+      --page:#0b1224;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      /* Aptos first (if installed on Windows), then Poppins, etc. */
-      font-family: "Aptos", "Poppins", system-ui, -apple-system,
-        BlinkMacSystemFont, "Segoe UI", sans-serif;
+    *{box-sizing:border-box;margin:0;padding:0;font-family:"Aptos","Poppins",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justify-content:center;padding:16px}
+    .app{width:100%;max-width:980px}
+    .card{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:22px 18px}
+    header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+    h1{font-size:1.35rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+    .subtitle{color:var(--sub);font-size:.9rem;margin-top:4px;max-width:680px}
+    .status{color:var(--sub);font-size:.8rem;margin-top:6px;min-height:18px}
+    .topActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .pill{
+      border:1px solid var(--border);background:transparent;color:var(--text);
+      border-radius:999px;padding:7px 12px;font-size:.82rem;cursor:pointer;
+      display:inline-flex;align-items:center;gap:6px
+    }
+    .pill .icon{font-size:1rem}
+
+    .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:14px 0}
+    .control{display:flex;flex-direction:column;gap:6px}
+    label{font-size:.78rem;color:var(--sub);letter-spacing:.08em;text-transform:uppercase}
+    select{
+      border:1px solid var(--border);background:transparent;color:var(--text);
+      border-radius:999px;padding:7px 12px;font-size:.9rem;outline:none;min-width:220px
     }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      padding: 16px;
+    .surahHeader{
+      background:var(--accentSoft);border-radius:14px;padding:12px 14px;display:none;
+      align-items:center;justify-content:space-between;gap:12px;margin-top:10px
+    }
+    .surahHeader.visible{display:flex}
+    .surahTitle{display:flex;flex-direction:column;gap:4px}
+    .surahTitle h2{font-size:1.05rem}
+    .surahTitle p{font-size:.82rem;color:var(--sub)}
+    .badge{
+      border:1px solid var(--border);border-radius:999px;padding:5px 10px;
+      font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap
+    }
+    .note{font-size:.72rem;color:var(--sub);margin-top:6px}
+    .bismillah{
+      display:none;text-align:center;margin:12px 0 6px;
+      font-family:"Scheherazade New","Amiri",serif;font-size:1.15rem;font-weight:600
+    }
+    .bismillah.visible{display:block}
+
+    /* Verse list */
+    .verses{margin-top:10px;display:flex;flex-direction:column;gap:10px;max-height:62vh;overflow:auto;padding-right:6px;scroll-behavior:smooth}
+    .verse{
+      border:1px solid var(--border);border-radius:14px;padding:12px 14px;background:rgba(148,163,184,.06)
+    }
+    body.dark .verse{background:rgba(15,23,42,.75)}
+    .verseTop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+    .leftTop{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .ayahNo{
+      font-size:.7rem;border-radius:999px;padding:2px 8px;background:rgba(148,163,184,.18);
+      letter-spacing:.08em;text-transform:uppercase
+    }
+    .miniBtns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .mini{
+      border:1px solid var(--border);background:transparent;color:var(--text);
+      border-radius:999px;padding:5px 10px;font-size:.75rem;cursor:pointer;
+      display:inline-flex;align-items:center;gap:5px
+    }
+    .mini.primary{background:var(--accentSoft)}
+    .mini .icon{font-size:.9rem}
+
+    .ayahArabic{
+      font-family:"Scheherazade New","Amiri",serif;direction:rtl;text-align:right;
+      font-size:1.25rem;line-height:1.95;margin-top:2px
     }
 
-    .app {
-      width: 100%;
-      max-width: 900px;
+    .block{margin-top:8px}
+    .blockLabel{
+      font-size:.72rem;font-weight:700;color:var(--sub);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px
+    }
+    .enText{
+      font-family:"Aptos","Times New Roman",serif;
+      font-size:.98rem;line-height:1.7
+    }
+    .mlText{
+      font-family:"Manjari","Rachana",serif;
+      font-size:1.02rem;line-height:1.8
     }
 
-    .card {
-      background: var(--card-bg);
-      border-radius: 18px;
-      box-shadow: 0 14px 40px rgba(15, 23, 42, 0.2);
-      padding: 24px 20px;
+    details.taf{margin-top:8px}
+    details.taf summary{
+      cursor:pointer;list-style:none;font-weight:700;color:var(--accent);font-size:.85rem
+    }
+    details.taf summary::-webkit-details-marker{display:none}
+    .tafBody{
+      margin-top:6px;font-family:"Manjari","Rachana",serif;font-size:1.02rem;line-height:1.85;color:var(--text)
     }
 
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 18px;
-      gap: 12px;
+    /* Audio bar */
+    .audioBar{
+      margin-top:14px;border:1px solid var(--border);border-radius:14px;padding:10px 12px;
+      background:rgba(148,163,184,.08);display:flex;flex-direction:column;gap:8px
+    }
+    body.dark .audioBar{background:rgba(15,23,42,.8)}
+    .audioInfo{font-size:.82rem;color:var(--sub)}
+    audio{width:100%}
+
+    /* Reading modes */
+    .hidden{display:none !important}
+
+    /* Mushaf page style */
+    .mushafWrap{
+      border:1px solid var(--border);
+      background:var(--page);
+      border-radius:16px;
+      padding:18px 16px;
+      box-shadow:0 8px 24px rgba(0,0,0,.08);
+    }
+    body.dark .mushafWrap{box-shadow:0 8px 24px rgba(0,0,0,.35)}
+    .mushafText{
+      font-family:"Scheherazade New","Amiri",serif;
+      direction:rtl;text-align:justify;
+      font-size:1.6rem;line-height:2.15;
+      word-spacing:.12em;
+    }
+    .ayahMark{
+      display:inline-block;
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:0 10px;
+      margin:0 6px;
+      font-size:1.05rem;
+      line-height:1.7;
+      vertical-align:middle;
+      background:rgba(148,163,184,.10);
     }
 
-    .title-group h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
+    /* Drawer / Overlay (shared) */
+    .drawerOverlay{
+      position:fixed;inset:0;background:rgba(0,0,0,.35);
+      display:none;align-items:flex-end;justify-content:center;padding:16px;z-index:50
+    }
+    .drawerOverlay.show{display:flex}
+    .drawer{
+      width:100%;max-width:720px;background:var(--card);border-radius:18px;
+      border:1px solid var(--border);box-shadow:var(--shadow);padding:14px 14px;
+      max-height:75vh;overflow:auto
+    }
+    .drawerTop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+    .drawerTop h3{font-size:1rem}
+    .bookmarkItem{
+      border:1px solid var(--border);border-radius:14px;padding:10px 12px;
+      display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px
+    }
+    .bookmarkItem small{color:var(--sub)}
+    .rowBtns{display:flex;gap:8px;flex-wrap:wrap}
+
+    /* Settings form */
+    .settingsGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+      margin-top:8px;
+    }
+    .settingRow{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px 12px;
+      background:rgba(148,163,184,.06);
+    }
+    body.dark .settingRow{background:rgba(15,23,42,.55)}
+    .settingRow h4{
+      font-size:.9rem;
+      margin-bottom:6px;
+    }
+    .settingRow .muted{
+      color:var(--sub);
+      font-size:.78rem;
+      margin-top:4px;
+      line-height:1.4;
+    }
+    .toggleLine{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    }
+    .toggleLine input[type="checkbox"]{transform:scale(1.2)}
+    .tiny{
+      font-size:.78rem;color:var(--sub)
     }
 
-    .title-group p {
-      font-size: 0.85rem;
-      color: var(--subtext);
-      margin-top: 4px;
-    }
-
-    .status {
-      font-size: 0.8rem;
-      color: var(--subtext);
-      margin-top: 4px;
-      min-height: 18px;
-    }
-
-    .dark-toggle {
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      background: transparent;
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--text);
-    }
-
-    .dark-toggle span.icon {
-      font-size: 1rem;
-    }
-
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 16px;
-      align-items: center;
-    }
-
-    label {
-      font-size: 0.8rem;
-      color: var(--subtext);
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-    }
-
-    select {
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      background: transparent;
-      color: var(--text);
-      font-size: 0.85rem;
-      outline: none;
-      min-width: 220px;
-    }
-
-    .surah-header {
-      border-radius: 14px;
-      padding: 12px 14px;
-      background: var(--accent-soft);
-      margin-bottom: 14px;
-      display: none;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .surah-header.visible {
-      display: flex;
-    }
-
-    .surah-main {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .surah-main h2 {
-      font-size: 1.1rem;
-    }
-
-    .surah-main p {
-      font-size: 0.8rem;
-      color: var(--subtext);
-    }
-
-    .surah-badge {
-      font-size: 0.75rem;
-      border-radius: 999px;
-      padding: 4px 10px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      white-space: nowrap;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    .bismillah {
-      text-align: center;
-      font-size: 1.1rem;
-      margin: 12px 0 6px;
-      font-weight: 600;
-      display: none;
-      font-family: "Scheherazade New", "Amiri", serif;
-    }
-
-    .bismillah.visible {
-      display: block;
-    }
-
-    .verses {
-      margin-top: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 60vh;
-      overflow-y: auto;
-      padding-right: 6px;
-      scroll-behavior: smooth;
-    }
-
-    .verse {
-      padding: 12px 14px;
-      border-radius: 14px;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      background: rgba(148, 163, 184, 0.06);
-      margin-bottom: 4px;
-    }
-
-    body.dark .verse {
-      background: rgba(15, 23, 42, 0.7);
-      border-color: rgba(148, 163, 184, 0.35);
-    }
-
-    .verse-top {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 4px;
-    }
-
-    .ayah-number {
-      font-size: 0.7rem;
-      border-radius: 999px;
-      padding: 2px 8px;
-      background: rgba(148, 163, 184, 0.18);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .play-btn {
-      border: none;
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 0.75rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: #e0f2fe;
-      color: #0f172a;
-    }
-
-    body.dark .play-btn {
-      background: #0f172a;
-      color: #e5e7eb;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-    }
-
-    .play-btn span.icon {
-      font-size: 0.8rem;
-    }
-
-    .ayah-arabic {
-      font-family: "Scheherazade New", "Amiri", serif;
-      direction: rtl;
-      text-align: right;
-      font-size: 1.2rem;
-      margin-top: 2px;
-      line-height: 1.9;
-    }
-
-    .ayah-block {
-      margin-top: 6px;
-    }
-
-    .ayah-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--subtext);
-      margin-bottom: 2px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    /* English translation block – Aptos focus */
-    .ayah-block-en .ayah-translation {
-      font-family: "Aptos", "Merriweather", "Times New Roman", serif;
-      font-size: 0.9rem;
-      line-height: 1.6;
-    }
-
-    /* Malayalam translation block */
-    .ayah-block-ml .ayah-translation {
-      font-family: "Manjari", "Rachana", serif;
-      font-size: 0.9rem;
-      line-height: 1.6;
-    }
-
-    .ayah-tafsir {
-      margin-top: 6px;
-      font-size: 0.8rem;
-    }
-
-    .ayah-tafsir summary {
-      cursor: pointer;
-      list-style: none;
-      font-weight: 600;
-      color: var(--accent);
-    }
-
-    .ayah-tafsir summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .ayah-tafsir-content {
-      margin-top: 4px;
-      line-height: 1.7;
-      font-size: 0.85rem;
-      font-family: "Manjari", "Rachana", serif;
-    }
-
-    .source-note {
-      font-size: 0.7rem;
-      color: var(--subtext);
-      margin-top: 4px;
-    }
-
-    /* Audio bar at bottom */
-    .audio-bar {
-      margin-top: 14px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(148, 163, 184, 0.3);
-      background: rgba(148, 163, 184, 0.08);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    body.dark .audio-bar {
-      background: rgba(15, 23, 42, 0.8);
-      border-color: rgba(148, 163, 184, 0.5);
-    }
-
-    .audio-info {
-      font-size: 0.8rem;
-      color: var(--subtext);
-    }
-
-    audio {
-      width: 100%;
-    }
-
-    @media (max-width: 640px) {
-      .card {
-        padding: 18px 14px;
-      }
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .surah-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
+    @media (max-width:640px){
+      .card{padding:18px 14px}
+      header{flex-direction:column;align-items:flex-start}
+      .topActions{justify-content:flex-start}
+      select{min-width:180px}
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <div class="card">
+
       <header>
-        <div class="title-group">
+        <div>
           <h1>Quran Reader</h1>
-          <p>Arabic + English (Aptos) + Malayalam translation & Malayalam tafseer.</p>
+          <div class="subtitle">Arabic + English (Aptos) + Malayalam translation, Malayalam tafseer, audio recitation, mushaf mode, bookmarks & settings.</div>
           <div class="status" id="status"></div>
         </div>
-        <button id="darkToggle" class="dark-toggle">
-          <span class="icon">🌙</span>
-          <span>Dark mode</span>
-        </button>
+
+        <div class="topActions">
+          <button class="pill" id="settingsBtn"><span class="icon">⚙️</span>Settings</button>
+          <button class="pill" id="darkToggle"><span class="icon">🌙</span>Dark</button>
+          <button class="pill" id="bookmarksBtn"><span class="icon">🔖</span>Bookmarks</button>
+        </div>
       </header>
 
       <div class="controls">
-        <div>
-          <label for="surahSelect">Choose a Surah</label><br />
+        <div class="control">
+          <label for="surahSelect">Choose a Surah</label>
           <select id="surahSelect">
             <option value="">Loading surahs...</option>
           </select>
         </div>
+
+        <div class="control">
+          <label for="modeSelect">Reading Mode</label>
+          <select id="modeSelect">
+            <option value="all">All</option>
+            <option value="arabic">Arabic Only</option>
+            <option value="english">English Only</option>
+            <option value="malayalam">Malayalam Only</option>
+            <option value="tafsir">Tafseer Only</option>
+            <option value="mushaf">Mushaf Page Mode</option>
+          </select>
+        </div>
       </div>
 
-      <div id="surahHeader" class="surah-header">
-        <div class="surah-main">
+      <div id="surahHeader" class="surahHeader">
+        <div class="surahTitle">
           <h2 id="surahName"></h2>
           <p id="surahMeta"></p>
-          <p class="source-note">
-            Arabic & English & Malayalam translation: AlQuran Cloud · Malayalam tafseer: QuranEnc (Mukhtasar) · Audio: Mishary Alafasy
-          </p>
+          <div class="note">Swipe left/right to change Surah. Tap ▶ to start continuous recitation.</div>
         </div>
-        <div class="surah-badge" id="surahBadge"></div>
+        <div class="badge" id="surahBadge"></div>
       </div>
 
-      <div id="bismillah" class="bismillah">
-        بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-      </div>
+      <div id="bismillah" class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
 
+      <!-- normal verse list -->
       <div id="verses" class="verses"></div>
 
-      <!-- Global audio player -->
-      <div id="audioBar" class="audio-bar">
-        <div id="audioInfo" class="audio-info">
-          Tap a play button next to any ayah to listen to the recitation (Mishary Alafasy).
+      <!-- mushaf page container -->
+      <div id="mushafWrap" class="mushafWrap hidden">
+        <div id="mushafText" class="mushafText"></div>
+      </div>
+
+      <div class="audioBar">
+        <div class="miniBtns" style="justify-content:flex-start">
+          <button class="mini primary" id="playFullBtn"><span class="icon">▶</span><span>Play Full Surah</span></button>
+          <button class="mini" id="resumeBtn"><span class="icon">⏯</span><span>Resume</span></button>
         </div>
+
+        <div class="audioInfo" id="audioInfo">
+          Tap any ▶ Play button to start. It will continue ayah-by-ayah automatically.
+        </div>
+
         <audio id="audioPlayer" controls></audio>
       </div>
     </div>
   </div>
 
-  <script>
-    // Text API: Arabic/English/Malayalam from AlQuran Cloud
-    const API_BASE = "https://api.alquran.cloud/v1";
-    // Malayalam tafseer (Mukhtasar) from QuranEnc
-    const ML_TAFSEER_URL_BASE =
-      "https://quranenc.com/api/v1/translation/sura/malayalam_mokhtasar";
-    // Audio CDN: Mishary Alafasy, by global ayah number
-    // Pattern: https://cdn.islamic.network/quran/audio/128/ar.alafasy/{ayahNumber}.mp3
+  <!-- Bookmarks drawer -->
+  <div id="drawerOverlay" class="drawerOverlay" role="dialog" aria-modal="true">
+    <div class="drawer">
+      <div class="drawerTop">
+        <h3>Bookmarks</h3>
+        <button class="pill" id="closeDrawer"><span class="icon">✕</span>Close</button>
+      </div>
+      <div id="bookmarksList"></div>
+      <div class="note">Bookmarks are saved on this device (localStorage).</div>
+    </div>
+  </div>
 
+  <!-- Settings drawer -->
+  <div id="settingsOverlay" class="drawerOverlay" role="dialog" aria-modal="true" style="align-items:flex-end;">
+    <div class="drawer">
+      <div class="drawerTop">
+        <h3>Settings</h3>
+        <button class="pill" id="closeSettings"><span class="icon">✕</span>Close</button>
+      </div>
+
+      <div class="settingsGrid">
+
+        <div class="settingRow">
+          <div class="toggleLine">
+            <h4>Auto Resume</h4>
+            <label class="tiny"><input type="checkbox" id="setAutoResume"> ON</label>
+          </div>
+          <div class="muted">If enabled, the app will prompt to resume the last played ayah when you open it.</div>
+        </div>
+
+        <div class="settingRow">
+          <h4>Default Reading Mode</h4>
+          <select id="setDefaultMode">
+            <option value="all">All</option>
+            <option value="arabic">Arabic Only</option>
+            <option value="english">English Only</option>
+            <option value="malayalam">Malayalam Only</option>
+            <option value="tafsir">Tafseer Only</option>
+            <option value="mushaf">Mushaf Page Mode</option>
+          </select>
+          <div class="muted">Used when there is no “last selected mode” saved yet.</div>
+        </div>
+
+        <div class="settingRow">
+          <h4>Default Reciter</h4>
+          <select id="setReciter">
+            <option value="ar.alafasy">Mishary Alafasy</option>
+            <option value="ar.husary">Mahmoud Al-Husary</option>
+            <option value="ar.minshawi">Al-Minshawi</option>
+            <option value="ar.abdurrahmaansudais">Abdulrahman Al-Sudais</option>
+            <option value="ar.saoodshuraym">Saood Al-Shuraym</option>
+            <option value="ar.shaatree">Abu Bakr Al-Shaatree</option>
+            <option value="ar.hudhaify">Ali Al-Hudhaify</option>
+            <option value="ar.mahermuaiqly">Maher Al-Muaiqly</option>
+            <option value="ar.abdulbasitmurattal">Abdul Basit (Murattal)</option>
+          </select>
+          <div class="muted">Audio uses the Islamic Network CDN reciter folders.</div>
+        </div>
+
+        <div class="settingRow">
+          <h4>Show / Hide Content</h4>
+          <div class="toggleLine" style="margin-top:8px;">
+            <label class="tiny"><input type="checkbox" id="setShowEnglish"> English</label>
+            <label class="tiny"><input type="checkbox" id="setShowMalayalam"> Malayalam</label>
+            <label class="tiny"><input type="checkbox" id="setShowTafsir"> Tafseer</label>
+          </div>
+          <div class="muted">Hiding a language will also affect “English Only / Malayalam Only / Tafseer Only” modes.</div>
+        </div>
+
+        <div class="settingRow">
+          <h4>Background Theme</h4>
+          <select id="setBgTheme">
+            <option value="default">Default</option>
+            <option value="sand">Sand</option>
+            <option value="mint">Mint</option>
+            <option value="sky">Sky</option>
+            <option value="rose">Rose</option>
+          </select>
+          <div class="muted">Dark mode still works on top of these themes.</div>
+        </div>
+
+        <div class="settingRow">
+          <div class="toggleLine">
+            <h4>Reset “Don’t ask again”</h4>
+            <button class="pill" id="resetResumePopup"><span class="icon">🔄</span>Reset</button>
+          </div>
+          <div class="muted">If you disabled the resume popup earlier, you can enable it again here.</div>
+        </div>
+
+      </div>
+
+      <div class="note" style="margin-top:10px;">
+        Tip: Your last selected mode is remembered automatically. Default mode is used only if there is no last mode yet.
+      </div>
+    </div>
+  </div>
+
+  <!-- Auto Resume Popup -->
+  <div id="resumePopup" class="drawerOverlay" style="align-items:center;">
+    <div class="drawer" style="max-width:520px;">
+      <div class="drawerTop">
+        <h3>Resume playback?</h3>
+        <button class="pill" id="resumePopupClose"><span class="icon">✕</span>Close</button>
+      </div>
+
+      <div id="resumePopupText" class="note" style="font-size:0.9rem; margin:8px 0 12px;"></div>
+
+      <div class="rowBtns" style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="pill" id="resumePopupResume"><span class="icon">⏯</span>Resume</button>
+        <button class="pill" id="resumePopupStart"><span class="icon">▶</span>Start Surah</button>
+        <button class="pill" id="resumePopupLater"><span class="icon">🕒</span>Not now</button>
+        <button class="pill" id="resumePopupNever"><span class="icon">🚫</span>Don't ask again</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // APIs
+    const API_BASE = "https://api.alquran.cloud/v1";
+    const ML_TAFSEER_URL_BASE = "https://quranenc.com/api/v1/translation/sura/malayalam_mokhtasar";
+
+    // ---- Storage keys ----
+    const KEY_THEME = "qr_theme";
+    const KEY_MODE = "qr_mode";
+    const KEY_LAST_SURAH = "qr_last_surah";
+    const KEY_BOOKMARKS = "qr_bookmarks"; // array of {surah, ayah, label}
+    const KEY_LAST_PLAY = "qr_last_play"; // {surah, ayahInSurah}
+    const KEY_NO_RESUME_POP = "qr_no_resume_popup";
+    const KEY_SETTINGS = "qr_settings_v1"; // master settings
+
+    // ---- Defaults ----
+    const DEFAULT_SETTINGS = {
+      autoResume: true,
+      defaultMode: "all",
+      reciter: "ar.alafasy",
+      showEnglish: true,
+      showMalayalam: true,
+      showTafsir: true,
+      bgTheme: "default"
+    };
+
+    // Elements
     const surahSelect = document.getElementById("surahSelect");
+    const modeSelect = document.getElementById("modeSelect");
+    const darkToggle = document.getElementById("darkToggle");
+    const bookmarksBtn = document.getElementById("bookmarksBtn");
+    const settingsBtn = document.getElementById("settingsBtn");
+
+    const statusEl = document.getElementById("status");
     const surahHeader = document.getElementById("surahHeader");
     const surahNameEl = document.getElementById("surahName");
     const surahMetaEl = document.getElementById("surahMeta");
     const surahBadgeEl = document.getElementById("surahBadge");
-    const versesContainer = document.getElementById("verses");
     const bismillahEl = document.getElementById("bismillah");
-    const darkToggle = document.getElementById("darkToggle");
-    const statusEl = document.getElementById("status");
+
+    const versesEl = document.getElementById("verses");
+    const mushafWrap = document.getElementById("mushafWrap");
+    const mushafTextEl = document.getElementById("mushafText");
+
     const audioPlayer = document.getElementById("audioPlayer");
     const audioInfo = document.getElementById("audioInfo");
+    const playFullBtn = document.getElementById("playFullBtn");
+    const resumeBtn = document.getElementById("resumeBtn");
 
-    function setStatus(message) {
-      statusEl.textContent = message || "";
+    // Bookmarks drawer
+    const drawerOverlay = document.getElementById("drawerOverlay");
+    const closeDrawerBtn = document.getElementById("closeDrawer");
+    const bookmarksListEl = document.getElementById("bookmarksList");
+
+    // Settings drawer
+    const settingsOverlay = document.getElementById("settingsOverlay");
+    const closeSettingsBtn = document.getElementById("closeSettings");
+    const setAutoResume = document.getElementById("setAutoResume");
+    const setDefaultMode = document.getElementById("setDefaultMode");
+    const setReciter = document.getElementById("setReciter");
+    const setShowEnglish = document.getElementById("setShowEnglish");
+    const setShowMalayalam = document.getElementById("setShowMalayalam");
+    const setShowTafsir = document.getElementById("setShowTafsir");
+    const setBgTheme = document.getElementById("setBgTheme");
+    const resetResumePopup = document.getElementById("resetResumePopup");
+
+    // Resume popup
+    const resumePopup = document.getElementById("resumePopup");
+    const resumePopupText = document.getElementById("resumePopupText");
+    const resumePopupClose = document.getElementById("resumePopupClose");
+    const resumePopupResume = document.getElementById("resumePopupResume");
+    const resumePopupStart = document.getElementById("resumePopupStart");
+    const resumePopupLater = document.getElementById("resumePopupLater");
+    const resumePopupNever = document.getElementById("resumePopupNever");
+
+    // State
+    let surahList = [];
+    let currentSurahNumber = null;
+
+    // Continuous audio playlist
+    let playlist = []; // array of { surahNumber, ayahInSurah, globalAyahNumber, title }
+    let playlistIndex = -1;
+    let playlistActive = false;
+
+    // Settings in memory
+    let settings = loadSettings();
+
+    function setStatus(msg){ statusEl.textContent = msg || ""; }
+
+    // --- Settings helpers ---
+    function loadSettings(){
+      try {
+        const raw = localStorage.getItem(KEY_SETTINGS);
+        if(!raw) return {...DEFAULT_SETTINGS};
+        const parsed = JSON.parse(raw);
+        return {...DEFAULT_SETTINGS, ...parsed};
+      } catch {
+        return {...DEFAULT_SETTINGS};
+      }
+    }
+    function saveSettings(){
+      localStorage.setItem(KEY_SETTINGS, JSON.stringify(settings));
+    }
+    function applyBgTheme(){
+      document.body.classList.remove("bg-sand","bg-mint","bg-sky","bg-rose");
+      if(settings.bgTheme === "sand") document.body.classList.add("bg-sand");
+      if(settings.bgTheme === "mint") document.body.classList.add("bg-mint");
+      if(settings.bgTheme === "sky")  document.body.classList.add("bg-sky");
+      if(settings.bgTheme === "rose") document.body.classList.add("bg-rose");
+    }
+    function syncSettingsUI(){
+      setAutoResume.checked = !!settings.autoResume;
+      setDefaultMode.value = settings.defaultMode;
+      setReciter.value = settings.reciter;
+      setShowEnglish.checked = !!settings.showEnglish;
+      setShowMalayalam.checked = !!settings.showMalayalam;
+      setShowTafsir.checked = !!settings.showTafsir;
+      setBgTheme.value = settings.bgTheme;
+    }
+    function applySettingsEverywhere(){
+      applyBgTheme();
+      applyReadingMode(modeSelect.value); // re-apply visibility with new show/hide toggles
+      updateResumeButton();
+      saveSettings();
     }
 
-    async function fetchSurahList() {
-      try {
-        setStatus("Loading surahs...");
-        const res = await fetch(API_BASE + "/surah");
-        const data = await res.json();
-        if (data.code !== 200) throw new Error("API error");
+    // --- Bookmarks ---
+    function loadBookmarks(){
+      try { return JSON.parse(localStorage.getItem(KEY_BOOKMARKS) || "[]"); }
+      catch { return []; }
+    }
+    function saveBookmarks(items){ localStorage.setItem(KEY_BOOKMARKS, JSON.stringify(items)); }
+    function isBookmarked(surah, ayah){
+      const b = loadBookmarks();
+      return b.some(x => x.surah === surah && x.ayah === ayah);
+    }
+    function toggleBookmark(surah, ayah, label){
+      const b = loadBookmarks();
+      const idx = b.findIndex(x => x.surah === surah && x.ayah === ayah);
+      if(idx >= 0) b.splice(idx,1);
+      else b.unshift({ surah, ayah, label, ts: Date.now() });
+      saveBookmarks(b);
+    }
+    function openDrawer(){ renderBookmarks(); drawerOverlay.classList.add("show"); }
+    function closeDrawer(){ drawerOverlay.classList.remove("show"); }
+    closeDrawerBtn.addEventListener("click", closeDrawer);
+    drawerOverlay.addEventListener("click", (e)=>{ if(e.target===drawerOverlay) closeDrawer(); });
 
-        const surahs = data.data;
-        surahSelect.innerHTML =
-          '<option value="">-- Select a surah --</option>';
+    function renderBookmarks(){
+      const b = loadBookmarks();
+      bookmarksListEl.innerHTML = "";
+      if(b.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "note";
+        empty.textContent = "No bookmarks yet. Tap ☆ on any ayah to save it.";
+        bookmarksListEl.appendChild(empty);
+        return;
+      }
+      b.forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "bookmarkItem";
+        const left = document.createElement("div");
+        left.innerHTML = `<div><strong>Surah ${item.surah} · Ayah ${item.ayah}</strong></div><small>${item.label || ""}</small>`;
+        const right = document.createElement("div");
+        right.className = "rowBtns";
 
-        surahs.forEach((s) => {
-          const option = document.createElement("option");
-          option.value = s.number; // use surah number
-          option.textContent =
-            s.number + ". " + s.englishName + " (" + s.name + ")";
-          surahSelect.appendChild(option);
+        const goBtn = document.createElement("button");
+        goBtn.className = "pill";
+        goBtn.textContent = "Go";
+        goBtn.addEventListener("click", async () => {
+          closeDrawer();
+          await goToSurah(item.surah);
+          const target = document.querySelector(`[data-ayah="${item.ayah}"]`);
+          if(target) target.scrollIntoView({ behavior: "smooth", block: "start" });
         });
 
-        setStatus("Surahs loaded. Choose one from the list.");
-      } catch (err) {
-        console.error(err);
-        setStatus(
-          "Could not load surah list. Please check your internet connection."
-        );
-        surahSelect.innerHTML =
-          '<option value="">Error loading surahs</option>';
-      }
+        const delBtn = document.createElement("button");
+        delBtn.className = "pill";
+        delBtn.textContent = "Remove";
+        delBtn.addEventListener("click", () => {
+          const list = loadBookmarks().filter(x => !(x.surah === item.surah && x.ayah === item.ayah));
+          saveBookmarks(list);
+          renderBookmarks();
+        });
+
+        right.appendChild(goBtn);
+        right.appendChild(delBtn);
+
+        row.appendChild(left);
+        row.appendChild(right);
+        bookmarksListEl.appendChild(row);
+      });
     }
 
-    async function fetchSurahDetails(surahNumber) {
-      if (!surahNumber) return;
-      try {
-        setStatus("Loading surah " + surahNumber + "...");
-
-        // 1) Arabic + English + Malayalam translation from AlQuran Cloud
-        const editionsUrl =
-          API_BASE +
-          "/surah/" +
-          surahNumber +
-          "/editions/quran-uthmani,en.sahih,ml.abdulhameed";
-
-        const [multiRes, mlTafRes] = await Promise.all([
-          fetch(editionsUrl),
-          // 2) Malayalam tafseer (Mukhtasar) from QuranEnc
-          fetch(ML_TAFSEER_URL_BASE + "/" + surahNumber).catch(() => null),
-        ]);
-
-        const multiData = await multiRes.json();
-        if (multiData.code !== 200) {
-          throw new Error("Arabic/English/Malayalam translation API error");
-        }
-
-        const editions = multiData.data;
-
-        const arabic = editions.find(
-          (e) => e.edition.identifier === "quran-uthmani"
-        );
-        const english = editions.find(
-          (e) => e.edition.identifier === "en.sahih"
-        );
-        const malayalamTrans = editions.find(
-          (e) => e.edition.identifier === "ml.abdulhameed"
-        );
-
-        if (!arabic || !english) {
-          throw new Error("Missing Arabic or English edition");
-        }
-
-        // Malayalam tafseer (Mukhtasar) array
-        let mlTafseerAyahs = [];
-        if (mlTafRes && mlTafRes.ok) {
-          const mlTafJson = await mlTafRes.json();
-          if (mlTafJson && Array.isArray(mlTafJson.result)) {
-            mlTafseerAyahs = mlTafJson.result;
-          }
-        }
-
-        // Header info (use English)
-        const name = english.englishName;
-        const arabicName = arabic.name;
-        const type = english.revelationType;
-        const ayahCount = english.numberOfAyahs;
-
-        surahHeader.classList.add("visible");
-        surahNameEl.textContent = name + " · " + arabicName;
-        surahMetaEl.textContent = type + " · " + ayahCount + " verses";
-        surahBadgeEl.textContent = "Surah " + surahNumber;
-
-        // Bismillah for all except 1 and 9
-        if (surahNumber !== "1" && surahNumber !== "9") {
-          bismillahEl.classList.add("visible");
-        } else {
-          bismillahEl.classList.remove("visible");
-        }
-
-        // Build verses
-        versesContainer.innerHTML = "";
-
-        const arAyahs = arabic.ayahs;
-        const enAyahs = english.ayahs;
-        const mlAyahs = malayalamTrans ? malayalamTrans.ayahs : [];
-
-        for (let i = 0; i < arAyahs.length; i++) {
-          const arAyah = arAyahs[i];
-          const enAyah = enAyahs[i];
-          const mlAyah = mlAyahs[i];
-
-          // Match Malayalam tafseer by aya number (safer than just index)
-          let mlTafObj = null;
-          if (mlTafseerAyahs.length > 0) {
-            mlTafObj = mlTafseerAyahs.find(
-              (item) => Number(item.aya) === arAyah.numberInSurah
-            );
-          }
-
-          const verseEl = document.createElement("div");
-          verseEl.className = "verse";
-
-          const verseTop = document.createElement("div");
-          verseTop.className = "verse-top";
-
-          const ayahNumber = document.createElement("div");
-          ayahNumber.className = "ayah-number";
-          ayahNumber.textContent = "Ayah " + arAyah.numberInSurah;
-
-          // Play button for this ayah
-          const playBtn = document.createElement("button");
-          playBtn.className = "play-btn";
-          playBtn.innerHTML = '<span class="icon">▶</span><span>Play</span>';
-
-          playBtn.addEventListener("click", () => {
-            const globalAyahNumber = arAyah.number; // overall ayah index
-            const audioUrl =
-              "https://cdn.islamic.network/quran/audio/128/ar.alafasy/" +
-              globalAyahNumber +
-              ".mp3";
-            audioPlayer.src = audioUrl;
-            audioPlayer
-              .play()
-              .then(() => {
-                audioInfo.textContent =
-                  "Playing Surah " +
-                  surahNumber +
-                  ", Ayah " +
-                  arAyah.numberInSurah +
-                  " – Mishary Alafasy.";
-              })
-              .catch(() => {
-                audioInfo.textContent =
-                  "Unable to auto play. Press play on the audio bar below.";
-              });
-          });
-
-          verseTop.appendChild(ayahNumber);
-          verseTop.appendChild(playBtn);
-          verseEl.appendChild(verseTop);
-
-          const arabicEl = document.createElement("div");
-          arabicEl.className = "ayah-arabic";
-          arabicEl.textContent = arAyah.text;
-          verseEl.appendChild(arabicEl);
-
-          // English block
-          if (enAyah && enAyah.text) {
-            const blockEn = document.createElement("div");
-            blockEn.className = "ayah-block ayah-block-en";
-
-            const labelEn = document.createElement("div");
-            labelEn.className = "ayah-label";
-            labelEn.textContent = "English";
-
-            const textEn = document.createElement("div");
-            textEn.className = "ayah-translation";
-            textEn.textContent = enAyah.text;
-
-            blockEn.appendChild(labelEn);
-            blockEn.appendChild(textEn);
-            verseEl.appendChild(blockEn);
-          }
-
-          // Malayalam translation (simple)
-          if (mlAyah && mlAyah.text) {
-            const blockMl = document.createElement("div");
-            blockMl.className = "ayah-block ayah-block-ml";
-
-            const labelMl = document.createElement("div");
-            labelMl.className = "ayah-label";
-            labelMl.textContent = "Malayalam (translation)";
-
-            const textMl = document.createElement("div");
-            textMl.className = "ayah-translation";
-            textMl.textContent = mlAyah.text;
-
-            blockMl.appendChild(labelMl);
-            blockMl.appendChild(textMl);
-            verseEl.appendChild(blockMl);
-          }
-
-          // Malayalam tafseer (Mukhtasar) – collapsible
-          if (mlTafObj && mlTafObj.translation) {
-            const tafsirDetails = document.createElement("details");
-            tafsirDetails.className = "ayah-tafsir";
-
-            const summary = document.createElement("summary");
-            summary.textContent = "Show Malayalam tafseer (Mukhtasar)";
-
-            const tafsirContent = document.createElement("div");
-            tafsirContent.className = "ayah-tafsir-content";
-            tafsirContent.textContent = mlTafObj.translation;
-
-            tafsirDetails.appendChild(summary);
-            tafsirDetails.appendChild(tafsirContent);
-            verseEl.appendChild(tafsirDetails);
-          }
-
-          versesContainer.appendChild(verseEl);
-        }
-
-        setStatus("Loaded: Surah " + surahNumber + " – " + name);
-      } catch (err) {
-        console.error(err);
-        setStatus("Could not load this surah. Please try again.");
-      }
-    }
-
-    function initDarkMode() {
-      const saved = localStorage.getItem("quranAppTheme");
-      if (saved === "dark") {
-        document.body.classList.add("dark");
-      }
-
+    // --- Theme ---
+    function initTheme(){
+      const saved = localStorage.getItem(KEY_THEME);
+      if(saved === "dark") document.body.classList.add("dark");
       darkToggle.addEventListener("click", () => {
         document.body.classList.toggle("dark");
-        const isDark = document.body.classList.contains("dark");
-        localStorage.setItem("quranAppTheme", isDark ? "dark" : "light");
+        localStorage.setItem(KEY_THEME, document.body.classList.contains("dark") ? "dark" : "light");
       });
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      initDarkMode();
-      fetchSurahList();
-
-      surahSelect.addEventListener("change", (e) => {
-        const surahNumber = e.target.value;
-        versesContainer.innerHTML = "";
-        audioPlayer.removeAttribute("src");
-        audioInfo.textContent =
-          "Tap a play button next to any ayah to listen to the recitation (Mishary Alafasy).";
-
-        if (!surahNumber) {
-          surahHeader.classList.remove("visible");
-          bismillahEl.classList.remove("visible");
-          setStatus("Please choose a surah.");
-          return;
-        }
-        fetchSurahDetails(surahNumber);
+    // --- Mode persistence ---
+    function initMode(){
+      const savedMode = localStorage.getItem(KEY_MODE);
+      // If there is a saved mode, use it; otherwise use defaultMode from Settings
+      modeSelect.value = savedMode || settings.defaultMode || "all";
+      modeSelect.addEventListener("change", () => {
+        localStorage.setItem(KEY_MODE, modeSelect.value);
+        applyReadingMode(modeSelect.value);
       });
+    }
+
+    // --- Swipe left/right to change surah ---
+    function initSwipe(){
+      let startX = null, startY = null;
+      const threshold = 55;
+      const restraint = 70;
+      const target = document.body;
+
+      target.addEventListener("touchstart", (e) => {
+        if(!e.touches || e.touches.length !== 1) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      }, { passive:true });
+
+      target.addEventListener("touchend", (e) => {
+        if(startX === null || startY === null) return;
+        const t = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0] : null;
+        if(!t) return;
+
+        const dx = t.clientX - startX;
+        const dy = t.clientY - startY;
+        startX = startY = null;
+
+        if(Math.abs(dx) < threshold) return;
+        if(Math.abs(dy) > restraint) return;
+
+        if(dx < 0) nextSurah();
+        else prevSurah();
+      }, { passive:true });
+    }
+    function nextSurah(){
+      if(!currentSurahNumber) return;
+      const next = Math.min(114, Number(currentSurahNumber) + 1);
+      if(next !== Number(currentSurahNumber)) goToSurah(String(next));
+    }
+    function prevSurah(){
+      if(!currentSurahNumber) return;
+      const prev = Math.max(1, Number(currentSurahNumber) - 1);
+      if(prev !== Number(currentSurahNumber)) goToSurah(String(prev));
+    }
+
+    // --- Audio: URL builder uses selected reciter ---
+    function audioUrlForGlobalAyah(globalAyahNumber){
+      const rec = settings.reciter || "ar.alafasy";
+      return "https://cdn.islamic.network/quran/audio/128/" + rec + "/" + globalAyahNumber + ".mp3";
+    }
+
+    // --- Mushaf text build ---
+    function buildMushaf(arAyahs){
+      mushafTextEl.innerHTML = "";
+      const frag = document.createDocumentFragment();
+      arAyahs.forEach(a => {
+        const text = document.createElement("span");
+        text.textContent = a.text + " ";
+        frag.appendChild(text);
+
+        const mark = document.createElement("span");
+        mark.className = "ayahMark";
+        mark.textContent = a.numberInSurah;
+        frag.appendChild(mark);
+
+        frag.appendChild(document.createTextNode(" "));
+      });
+      mushafTextEl.appendChild(frag);
+    }
+
+    // --- Playlist build + playback ---
+    function buildPlaylist(arAyahs, surahNumber){
+      const sName = surahList.find(x => String(x.number) === String(surahNumber))?.englishName || "";
+      playlist = arAyahs.map(a => ({
+        surahNumber: String(surahNumber),
+        ayahInSurah: a.numberInSurah,
+        globalAyahNumber: a.number,
+        title: `Surah ${surahNumber} · Ayah ${a.numberInSurah} (${sName})`
+      }));
+    }
+    function startPlaylistAtAyah(ayahInSurah){
+      const idx = playlist.findIndex(p => p.ayahInSurah === ayahInSurah);
+      if(idx < 0) return;
+      playlistIndex = idx;
+      playlistActive = true;
+      playCurrent();
+    }
+    function saveLastPlayPoint(surahNumber, ayahInSurah){
+      localStorage.setItem(KEY_LAST_PLAY, JSON.stringify({
+        surah: String(surahNumber),
+        ayahInSurah: Number(ayahInSurah)
+      }));
+    }
+    function getLastPlayPoint(){
+      try { return JSON.parse(localStorage.getItem(KEY_LAST_PLAY) || "null"); }
+      catch { return null; }
+    }
+    function updateResumeButton(){
+      const lp = getLastPlayPoint();
+      if(!lp){
+        resumeBtn.disabled = true;
+        resumeBtn.style.opacity = "0.6";
+        resumeBtn.innerHTML = `<span class="icon">⏯</span><span>Resume</span>`;
+        return;
+      }
+      resumeBtn.disabled = false;
+      resumeBtn.style.opacity = "1";
+      resumeBtn.innerHTML = `<span class="icon">⏯</span><span>Resume (S${lp.surah} A${lp.ayahInSurah})</span>`;
+    }
+    function playCurrent(){
+      if(!playlistActive || playlistIndex < 0 || playlistIndex >= playlist.length) return;
+      const item = playlist[playlistIndex];
+
+      saveLastPlayPoint(item.surahNumber, item.ayahInSurah);
+      updateResumeButton();
+
+      audioPlayer.src = audioUrlForGlobalAyah(item.globalAyahNumber);
+      audioPlayer.play().then(()=>{
+        audioInfo.textContent = "Playing: " + item.title + " — (auto next).";
+      }).catch(()=>{
+        audioInfo.textContent = "Ready: " + item.title + ". Tap play (iOS requires user action).";
+      });
+    }
+    audioPlayer.addEventListener("ended", () => {
+      if(!playlistActive) return;
+      playlistIndex += 1;
+      if(playlistIndex >= playlist.length){
+        playlistActive = false;
+        audioInfo.textContent = "Finished this Surah. (Continuous recitation ended)";
+        return;
+      }
+      playCurrent();
+    });
+
+    // --- Reading modes + show/hide toggles ---
+    function applyReadingMode(mode){
+      // Mushaf container toggle
+      const showMushaf = (mode === "mushaf");
+      mushafWrap.classList.toggle("hidden", !showMushaf);
+      versesEl.classList.toggle("hidden", showMushaf);
+
+      // Status helper if user selected a mode but disabled that content
+      const blocked =
+        (mode === "english" && !settings.showEnglish) ||
+        (mode === "malayalam" && !settings.showMalayalam) ||
+        (mode === "tafsir" && !settings.showTafsir);
+
+      if(blocked){
+        setStatus("That mode is hidden in Settings. Enable it in Settings → Show/Hide Content.");
+      } else {
+        setStatus(showMushaf ? "Mushaf Page Mode (Arabic flowing page)" : "");
+      }
+
+      if(!showMushaf){
+        const showAll = mode === "all";
+
+        // Arabic is always allowed in UI (no toggle requested for Arabic)
+        document.querySelectorAll(".ayahArabic").forEach(el =>
+          el.classList.toggle("hidden", !(showAll || mode === "arabic"))
+        );
+
+        document.querySelectorAll(".englishBlock").forEach(el => {
+          const allow = settings.showEnglish && (showAll || mode === "english");
+          el.classList.toggle("hidden", !allow);
+        });
+
+        document.querySelectorAll(".malayalamBlock").forEach(el => {
+          const allow = settings.showMalayalam && (showAll || mode === "malayalam");
+          el.classList.toggle("hidden", !allow);
+        });
+
+        document.querySelectorAll(".tafsirBlock").forEach(el => {
+          const allow = settings.showTafsir && (showAll || mode === "tafsir");
+          el.classList.toggle("hidden", !allow);
+        });
+      }
+
+      if(mode === "tafsir" && settings.showTafsir){
+        document.querySelectorAll("details.taf").forEach(d => d.open = true);
+      }
+    }
+
+    // --- Auto resume popup control ---
+    function shouldShowResumePopup(){
+      if(!settings.autoResume) return false;
+      const disabledByUser = localStorage.getItem(KEY_NO_RESUME_POP) === "1";
+      if(disabledByUser) return false;
+      return !!getLastPlayPoint();
+    }
+    function openResumePopup(){
+      const lp = getLastPlayPoint();
+      if(!lp) return;
+      resumePopupText.textContent =
+        `You last played Surah ${lp.surah}, Ayah ${lp.ayahInSurah}. Do you want to continue?`;
+      resumePopup.classList.add("show");
+    }
+    function closeResumePopup(){ resumePopup.classList.remove("show"); }
+
+    resumePopupClose.addEventListener("click", closeResumePopup);
+    resumePopupLater.addEventListener("click", closeResumePopup);
+    resumePopupNever.addEventListener("click", () => {
+      localStorage.setItem(KEY_NO_RESUME_POP, "1");
+      closeResumePopup();
+    });
+    resumePopupResume.addEventListener("click", async () => {
+      closeResumePopup();
+      resumeBtn.click();
+    });
+    resumePopupStart.addEventListener("click", async () => {
+      closeResumePopup();
+      const lp = getLastPlayPoint();
+      if(!lp) return;
+      if(String(currentSurahNumber) !== String(lp.surah)){
+        await goToSurah(String(lp.surah));
+      }
+      startPlaylistAtAyah(1);
+      const target = document.querySelector(`[data-ayah="1"]`);
+      if(target) target.scrollIntoView({ behavior:"smooth", block:"start" });
+    });
+
+    // --- Settings drawer open/close + events ---
+    function openSettings(){
+      syncSettingsUI();
+      settingsOverlay.classList.add("show");
+    }
+    function closeSettings(){
+      settingsOverlay.classList.remove("show");
+    }
+    settingsBtn.addEventListener("click", openSettings);
+    closeSettingsBtn.addEventListener("click", closeSettings);
+    settingsOverlay.addEventListener("click", (e)=>{ if(e.target===settingsOverlay) closeSettings(); });
+
+    setAutoResume.addEventListener("change", () => { settings.autoResume = setAutoResume.checked; applySettingsEverywhere(); });
+    setDefaultMode.addEventListener("change", () => { settings.defaultMode = setDefaultMode.value; applySettingsEverywhere(); });
+    setReciter.addEventListener("change", () => {
+      settings.reciter = setReciter.value;
+      applySettingsEverywhere();
+      // If currently playing/paused, keep position but update next play URL:
+      // (We won't force restart audio automatically)
+      audioInfo.textContent = "Reciter changed. Next play will use: " + setReciter.options[setReciter.selectedIndex].text;
+    });
+    setShowEnglish.addEventListener("change", () => { settings.showEnglish = setShowEnglish.checked; applySettingsEverywhere(); });
+    setShowMalayalam.addEventListener("change", () => { settings.showMalayalam = setShowMalayalam.checked; applySettingsEverywhere(); });
+    setShowTafsir.addEventListener("change", () => { settings.showTafsir = setShowTafsir.checked; applySettingsEverywhere(); });
+    setBgTheme.addEventListener("change", () => { settings.bgTheme = setBgTheme.value; applySettingsEverywhere(); });
+
+    resetResumePopup.addEventListener("click", () => {
+      localStorage.removeItem(KEY_NO_RESUME_POP);
+      setStatus("Resume popup reset. It can show again if Auto Resume is ON.");
+    });
+
+    // --- Surah list + fetching ---
+    async function fetchSurahList(){
+      try{
+        setStatus("Loading surahs...");
+        const res = await fetch(API_BASE + "/surah");
+        const json = await res.json();
+        if(json.code !== 200) throw new Error("API error");
+
+        surahList = json.data || [];
+        surahSelect.innerHTML = '<option value="">-- Select a surah --</option>';
+
+        surahList.forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s.number;
+          opt.textContent = `${s.number}. ${s.englishName} (${s.name})`;
+          surahSelect.appendChild(opt);
+        });
+
+        setStatus("Surahs loaded.");
+
+        const last = localStorage.getItem(KEY_LAST_SURAH);
+        if(last){
+          await goToSurah(last);
+        }
+      } catch(err){
+        console.error(err);
+        setStatus("Could not load surah list. Check internet.");
+        surahSelect.innerHTML = '<option value="">Error loading surahs</option>';
+      }
+    }
+
+    async function goToSurah(surahNumber){
+      surahSelect.value = surahNumber;
+      await fetchSurahDetails(String(surahNumber));
+    }
+
+    async function fetchSurahDetails(surahNumber){
+      if(!surahNumber) return;
+
+      try{
+        currentSurahNumber = String(surahNumber);
+        localStorage.setItem(KEY_LAST_SURAH, currentSurahNumber);
+
+        versesEl.innerHTML = "";
+        mushafTextEl.innerHTML = "";
+        audioPlayer.removeAttribute("src");
+        playlist = []; playlistIndex = -1; playlistActive = false;
+        audioInfo.textContent = "Tap any ▶ Play button to start. It will continue ayah-by-ayah automatically.";
+
+        setStatus("Loading surah " + surahNumber + "...");
+
+        const editionsUrl = API_BASE + "/surah/" + surahNumber + "/editions/quran-uthmani,en.sahih,ml.abdulhameed";
+        const [multiRes, tafRes] = await Promise.all([
+          fetch(editionsUrl),
+          fetch(ML_TAFSEER_URL_BASE + "/" + surahNumber).catch(()=>null)
+        ]);
+
+        const multiJson = await multiRes.json();
+        if(multiJson.code !== 200) throw new Error("Text API error");
+
+        const editions = multiJson.data || [];
+        const arabic = editions.find(e => e.edition.identifier === "quran-uthmani");
+        const english = editions.find(e => e.edition.identifier === "en.sahih");
+        const malayalam = editions.find(e => e.edition.identifier === "ml.abdulhameed");
+        if(!arabic || !english) throw new Error("Missing editions");
+
+        let tafAyahs = [];
+        if(tafRes && tafRes.ok){
+          const tafJson = await tafRes.json();
+          if(tafJson && Array.isArray(tafJson.result)) tafAyahs = tafJson.result;
+        }
+
+        surahHeader.classList.add("visible");
+        surahNameEl.textContent = `${english.englishName} · ${arabic.name}`;
+        surahMetaEl.textContent = `${english.revelationType} · ${english.numberOfAyahs} verses`;
+        surahBadgeEl.textContent = `Surah ${surahNumber}`;
+
+        if(String(surahNumber) !== "1" && String(surahNumber) !== "9") bismillahEl.classList.add("visible");
+        else bismillahEl.classList.remove("visible");
+
+        const arAyahs = arabic.ayahs || [];
+        const enAyahs = english.ayahs || [];
+        const mlAyahs = (malayalam && malayalam.ayahs) ? malayalam.ayahs : [];
+
+        buildPlaylist(arAyahs, surahNumber);
+        buildMushaf(arAyahs);
+
+        for(let i=0;i<arAyahs.length;i++){
+          const ar = arAyahs[i];
+          const en = enAyahs[i];
+          const ml = mlAyahs[i];
+          const tafObj = tafAyahs.find(x => Number(x.aya) === ar.numberInSurah) || null;
+
+          const verse = document.createElement("div");
+          verse.className = "verse";
+          verse.setAttribute("data-ayah", ar.numberInSurah);
+
+          const top = document.createElement("div");
+          top.className = "verseTop";
+
+          const left = document.createElement("div");
+          left.className = "leftTop";
+
+          const no = document.createElement("div");
+          no.className = "ayahNo";
+          no.textContent = "Ayah " + ar.numberInSurah;
+          left.appendChild(no);
+
+          const right = document.createElement("div");
+          right.className = "miniBtns";
+
+          const playBtn = document.createElement("button");
+          playBtn.className = "mini primary";
+          playBtn.innerHTML = '<span class="icon">▶</span><span>Play</span>';
+          playBtn.addEventListener("click", () => startPlaylistAtAyah(ar.numberInSurah));
+
+          const bmBtn = document.createElement("button");
+          bmBtn.className = "mini";
+          const label = `${english.englishName} · ${arabic.name}`;
+          const refreshBmIcon = () => {
+            const saved = isBookmarked(String(surahNumber), ar.numberInSurah);
+            bmBtn.innerHTML = saved
+              ? '<span class="icon">★</span><span>Saved</span>'
+              : '<span class="icon">☆</span><span>Save</span>';
+          };
+          refreshBmIcon();
+          bmBtn.addEventListener("click", () => { toggleBookmark(String(surahNumber), ar.numberInSurah, label); refreshBmIcon(); });
+
+          right.appendChild(playBtn);
+          right.appendChild(bmBtn);
+
+          top.appendChild(left);
+          top.appendChild(right);
+          verse.appendChild(top);
+
+          const arEl = document.createElement("div");
+          arEl.className = "ayahArabic";
+          arEl.textContent = ar.text;
+          verse.appendChild(arEl);
+
+          if(en && en.text){
+            const block = document.createElement("div");
+            block.className = "block englishBlock";
+            const lab = document.createElement("div");
+            lab.className = "blockLabel";
+            lab.textContent = "English";
+            const txt = document.createElement("div");
+            txt.className = "enText";
+            txt.textContent = en.text;
+            block.appendChild(lab); block.appendChild(txt);
+            verse.appendChild(block);
+          }
+
+          if(ml && ml.text){
+            const block = document.createElement("div");
+            block.className = "block malayalamBlock";
+            const lab = document.createElement("div");
+            lab.className = "blockLabel";
+            lab.textContent = "Malayalam (translation)";
+            const txt = document.createElement("div");
+            txt.className = "mlText";
+            txt.textContent = ml.text;
+            block.appendChild(lab); block.appendChild(txt);
+            verse.appendChild(block);
+          }
+
+          if(tafObj && tafObj.translation){
+            const d = document.createElement("details");
+            d.className = "taf tafsirBlock";
+            const s = document.createElement("summary");
+            s.textContent = "Show Malayalam Tafseer (Mukhtasar)";
+            const body = document.createElement("div");
+            body.className = "tafBody";
+            body.textContent = tafObj.translation;
+            d.appendChild(s); d.appendChild(body);
+            verse.appendChild(d);
+          }
+
+          versesEl.appendChild(verse);
+        }
+
+        setStatus("Loaded Surah " + surahNumber + ".");
+        applyReadingMode(modeSelect.value);
+        updateResumeButton();
+
+      } catch(err){
+        console.error(err);
+        setStatus("Could not load this Surah. Check internet and try again.");
+      }
+    }
+
+    // Buttons
+    playFullBtn.addEventListener("click", () => {
+      if(!currentSurahNumber || playlist.length === 0) return;
+      startPlaylistAtAyah(1);
+    });
+
+    resumeBtn.addEventListener("click", async () => {
+      const lp = getLastPlayPoint();
+      if(!lp) return;
+
+      if(String(currentSurahNumber) !== String(lp.surah)){
+        await goToSurah(String(lp.surah));
+      }
+      startPlaylistAtAyah(Number(lp.ayahInSurah));
+      const target = document.querySelector(`[data-ayah="${lp.ayahInSurah}"]`);
+      if(target) target.scrollIntoView({ behavior:"smooth", block:"start" });
+    });
+
+    // Surah change
+    surahSelect.addEventListener("change", (e) => {
+      const v = e.target.value;
+      if(!v){
+        surahHeader.classList.remove("visible");
+        bismillahEl.classList.remove("visible");
+        versesEl.innerHTML = "";
+        mushafTextEl.innerHTML = "";
+        setStatus("Please choose a Surah.");
+        return;
+      }
+      fetchSurahDetails(v);
+    });
+
+    // Bookmarks open
+    bookmarksBtn.addEventListener("click", openDrawer);
+
+    // Init
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Apply settings first (background/theme)
+      applyBgTheme();
+      syncSettingsUI();
+
+      initTheme();
+      initMode();
+      initSwipe();
+
+      updateResumeButton();
+
+      await fetchSurahList();
+
+      // Apply mode + settings visibility after load
+      applyReadingMode(modeSelect.value);
+
+      // Auto resume popup (if enabled)
+      if(shouldShowResumePopup()){
+        setTimeout(openResumePopup, 350);
+      }
     });
   </script>
 </body>
