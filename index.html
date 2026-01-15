@@ -5,8 +5,8 @@
   <title>Quran Reader</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Fonts (Arabic + Malayalam + UI fallback). Aptos will be used if installed on your device. -->
-  <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Poppins:wght@300;400;600&family=Scheherazade+New:wght@400;700&family=Manjari:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Fonts: Arabic (Amiri Quran), Malayalam (Manjari), UI (Poppins). Aptos will be used if installed. -->
+  <link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Poppins:wght@300;400;600&family=Manjari:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
     :root{
@@ -30,7 +30,10 @@
       --page:#0b1224;
     }
 
-    *{box-sizing:border-box;margin:0;padding:0;font-family:"Aptos","Poppins",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    *{
+      box-sizing:border-box;margin:0;padding:0;
+      font-family:"Aptos","Poppins",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+    }
     body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;justify-content:center;padding:16px}
     .app{width:100%;max-width:980px}
     .card{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:22px 18px}
@@ -67,9 +70,11 @@
       font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap
     }
     .note{font-size:.72rem;color:var(--sub);margin-top:6px}
+
     .bismillah{
       display:none;text-align:center;margin:12px 0 6px;
-      font-family:"Scheherazade New","Amiri",serif;font-size:1.15rem;font-weight:600
+      font-family:"Amiri Quran","Amiri",serif;
+      font-size:1.25rem;font-weight:600
     }
     .bismillah.visible{display:block}
 
@@ -94,19 +99,27 @@
     .mini.primary{background:var(--accentSoft)}
     .mini .icon{font-size:.9rem}
 
+    /* Arabic ayah text (UPDATED font) */
     .ayahArabic{
-      font-family:"Scheherazade New","Amiri",serif;direction:rtl;text-align:right;
-      font-size:1.25rem;line-height:1.95;margin-top:2px
+      font-family:"Amiri Quran","Amiri",serif;
+      direction:rtl;text-align:right;
+      font-size:1.35rem;
+      line-height:2.05;
+      margin-top:4px
     }
 
     .block{margin-top:8px}
     .blockLabel{
       font-size:.72rem;font-weight:700;color:var(--sub);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px
     }
+
+    /* English (Aptos if available) */
     .enText{
       font-family:"Aptos","Times New Roman",serif;
       font-size:.98rem;line-height:1.7
     }
+
+    /* Malayalam */
     .mlText{
       font-family:"Manjari","Rachana",serif;
       font-size:1.02rem;line-height:1.8
@@ -133,34 +146,38 @@
     /* Reading modes */
     .hidden{display:none !important}
 
-    /* Mushaf page style */
+    /* Mushaf page style (UPDATED font) */
     .mushafWrap{
       border:1px solid var(--border);
       background:var(--page);
       border-radius:16px;
-      padding:18px 16px;
+      padding:22px 18px;
       box-shadow:0 8px 24px rgba(0,0,0,.08);
     }
     body.dark .mushafWrap{box-shadow:0 8px 24px rgba(0,0,0,.35)}
     .mushafText{
-      font-family:"Scheherazade New","Amiri",serif;
-      direction:rtl;text-align:justify;
-      font-size:1.6rem;line-height:2.15;
-      word-spacing:.12em;
+      font-family:"Amiri Quran","Amiri",serif;
+      direction:rtl;
+      text-align:justify;
+      font-size:1.8rem;
+      line-height:2.3;
+      word-spacing:0.18em;
+      letter-spacing:0.02em;
     }
     .ayahMark{
       display:inline-block;
       border:1px solid var(--border);
       border-radius:999px;
-      padding:0 10px;
-      margin:0 6px;
-      font-size:1.05rem;
-      line-height:1.7;
+      padding:2px 12px;
+      margin:0 8px;
+      font-size:1.1rem;
+      line-height:1.9;
       vertical-align:middle;
-      background:rgba(148,163,184,.10);
+      background:rgba(148,163,184,.12);
+      font-family:"Amiri Quran","Amiri",serif;
     }
 
-    /* Drawer / Overlay (shared) */
+    /* Drawer / Overlay */
     .drawerOverlay{
       position:fixed;inset:0;background:rgba(0,0,0,.35);
       display:none;align-items:flex-end;justify-content:center;padding:16px;z-index:50
@@ -181,12 +198,7 @@
     .rowBtns{display:flex;gap:8px;flex-wrap:wrap}
 
     /* Settings form */
-    .settingsGrid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:12px;
-      margin-top:8px;
-    }
+    .settingsGrid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:8px}
     .settingRow{
       border:1px solid var(--border);
       border-radius:14px;
@@ -194,23 +206,11 @@
       background:rgba(148,163,184,.06);
     }
     body.dark .settingRow{background:rgba(15,23,42,.55)}
-    .settingRow h4{
-      font-size:.9rem;
-      margin-bottom:6px;
-    }
-    .settingRow .muted{
-      color:var(--sub);
-      font-size:.78rem;
-      margin-top:4px;
-      line-height:1.4;
-    }
-    .toggleLine{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
-    }
+    .settingRow h4{font-size:.9rem;margin-bottom:6px}
+    .settingRow .muted{color:var(--sub);font-size:.78rem;margin-top:4px;line-height:1.4}
+    .toggleLine{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
     .toggleLine input[type="checkbox"]{transform:scale(1.2)}
-    .tiny{
-      font-size:.78rem;color:var(--sub)
-    }
+    .tiny{font-size:.78rem;color:var(--sub)}
 
     @media (max-width:640px){
       .card{padding:18px 14px}
@@ -228,7 +228,7 @@
       <header>
         <div>
           <h1>Quran Reader</h1>
-          <div class="subtitle">Arabic + English (Aptos) + Malayalam translation, Malayalam tafseer, audio recitation, mushaf mode, bookmarks & settings.</div>
+          <div class="subtitle">Arabic (Amiri Quran) + English (Aptos) + Malayalam, Malayalam tafseer, audio, mushaf mode, bookmarks & settings.</div>
           <div class="status" id="status"></div>
         </div>
 
@@ -271,10 +271,8 @@
 
       <div id="bismillah" class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
 
-      <!-- normal verse list -->
       <div id="verses" class="verses"></div>
 
-      <!-- mushaf page container -->
       <div id="mushafWrap" class="mushafWrap hidden">
         <div id="mushafText" class="mushafText"></div>
       </div>
@@ -360,7 +358,7 @@
             <label class="tiny"><input type="checkbox" id="setShowMalayalam"> Malayalam</label>
             <label class="tiny"><input type="checkbox" id="setShowTafsir"> Tafseer</label>
           </div>
-          <div class="muted">Hiding a language will also affect “English Only / Malayalam Only / Tafseer Only” modes.</div>
+          <div class="muted">Hiding a language also affects “English Only / Malayalam Only / Tafseer Only” modes.</div>
         </div>
 
         <div class="settingRow">
@@ -411,20 +409,17 @@
   </div>
 
   <script>
-    // APIs
     const API_BASE = "https://api.alquran.cloud/v1";
     const ML_TAFSEER_URL_BASE = "https://quranenc.com/api/v1/translation/sura/malayalam_mokhtasar";
 
-    // ---- Storage keys ----
     const KEY_THEME = "qr_theme";
     const KEY_MODE = "qr_mode";
     const KEY_LAST_SURAH = "qr_last_surah";
-    const KEY_BOOKMARKS = "qr_bookmarks"; // array of {surah, ayah, label}
-    const KEY_LAST_PLAY = "qr_last_play"; // {surah, ayahInSurah}
+    const KEY_BOOKMARKS = "qr_bookmarks";
+    const KEY_LAST_PLAY = "qr_last_play";
     const KEY_NO_RESUME_POP = "qr_no_resume_popup";
-    const KEY_SETTINGS = "qr_settings_v1"; // master settings
+    const KEY_SETTINGS = "qr_settings_v1";
 
-    // ---- Defaults ----
     const DEFAULT_SETTINGS = {
       autoResume: true,
       defaultMode: "all",
@@ -435,7 +430,6 @@
       bgTheme: "default"
     };
 
-    // Elements
     const surahSelect = document.getElementById("surahSelect");
     const modeSelect = document.getElementById("modeSelect");
     const darkToggle = document.getElementById("darkToggle");
@@ -458,12 +452,10 @@
     const playFullBtn = document.getElementById("playFullBtn");
     const resumeBtn = document.getElementById("resumeBtn");
 
-    // Bookmarks drawer
     const drawerOverlay = document.getElementById("drawerOverlay");
     const closeDrawerBtn = document.getElementById("closeDrawer");
     const bookmarksListEl = document.getElementById("bookmarksList");
 
-    // Settings drawer
     const settingsOverlay = document.getElementById("settingsOverlay");
     const closeSettingsBtn = document.getElementById("closeSettings");
     const setAutoResume = document.getElementById("setAutoResume");
@@ -475,7 +467,6 @@
     const setBgTheme = document.getElementById("setBgTheme");
     const resetResumePopup = document.getElementById("resetResumePopup");
 
-    // Resume popup
     const resumePopup = document.getElementById("resumePopup");
     const resumePopupText = document.getElementById("resumePopupText");
     const resumePopupClose = document.getElementById("resumePopupClose");
@@ -484,21 +475,17 @@
     const resumePopupLater = document.getElementById("resumePopupLater");
     const resumePopupNever = document.getElementById("resumePopupNever");
 
-    // State
     let surahList = [];
     let currentSurahNumber = null;
 
-    // Continuous audio playlist
-    let playlist = []; // array of { surahNumber, ayahInSurah, globalAyahNumber, title }
+    let playlist = [];
     let playlistIndex = -1;
     let playlistActive = false;
 
-    // Settings in memory
     let settings = loadSettings();
 
     function setStatus(msg){ statusEl.textContent = msg || ""; }
 
-    // --- Settings helpers ---
     function loadSettings(){
       try {
         const raw = localStorage.getItem(KEY_SETTINGS);
@@ -509,16 +496,16 @@
         return {...DEFAULT_SETTINGS};
       }
     }
-    function saveSettings(){
-      localStorage.setItem(KEY_SETTINGS, JSON.stringify(settings));
-    }
+    function saveSettings(){ localStorage.setItem(KEY_SETTINGS, JSON.stringify(settings)); }
+
     function applyBgTheme(){
       document.body.classList.remove("bg-sand","bg-mint","bg-sky","bg-rose");
       if(settings.bgTheme === "sand") document.body.classList.add("bg-sand");
       if(settings.bgTheme === "mint") document.body.classList.add("bg-mint");
-      if(settings.bgTheme === "sky")  document.body.classList.add("bg-sky");
+      if(settings.bgTheme === "sky") document.body.classList.add("bg-sky");
       if(settings.bgTheme === "rose") document.body.classList.add("bg-rose");
     }
+
     function syncSettingsUI(){
       setAutoResume.checked = !!settings.autoResume;
       setDefaultMode.value = settings.defaultMode;
@@ -528,14 +515,71 @@
       setShowTafsir.checked = !!settings.showTafsir;
       setBgTheme.value = settings.bgTheme;
     }
+
     function applySettingsEverywhere(){
       applyBgTheme();
-      applyReadingMode(modeSelect.value); // re-apply visibility with new show/hide toggles
+      applyReadingMode(modeSelect.value);
       updateResumeButton();
       saveSettings();
     }
 
-    // --- Bookmarks ---
+    function initTheme(){
+      const saved = localStorage.getItem(KEY_THEME);
+      if(saved === "dark") document.body.classList.add("dark");
+      darkToggle.addEventListener("click", () => {
+        document.body.classList.toggle("dark");
+        localStorage.setItem(KEY_THEME, document.body.classList.contains("dark") ? "dark" : "light");
+      });
+    }
+
+    function initMode(){
+      const savedMode = localStorage.getItem(KEY_MODE);
+      modeSelect.value = savedMode || settings.defaultMode || "all";
+      modeSelect.addEventListener("change", () => {
+        localStorage.setItem(KEY_MODE, modeSelect.value);
+        applyReadingMode(modeSelect.value);
+      });
+    }
+
+    function initSwipe(){
+      let startX = null, startY = null;
+      const threshold = 55;
+      const restraint = 70;
+
+      document.body.addEventListener("touchstart", (e) => {
+        if(!e.touches || e.touches.length !== 1) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      }, { passive:true });
+
+      document.body.addEventListener("touchend", (e) => {
+        if(startX === null || startY === null) return;
+        const t = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0] : null;
+        if(!t) return;
+
+        const dx = t.clientX - startX;
+        const dy = t.clientY - startY;
+        startX = startY = null;
+
+        if(Math.abs(dx) < threshold) return;
+        if(Math.abs(dy) > restraint) return;
+
+        if(dx < 0) nextSurah();
+        else prevSurah();
+      }, { passive:true });
+    }
+
+    function nextSurah(){
+      if(!currentSurahNumber) return;
+      const next = Math.min(114, Number(currentSurahNumber) + 1);
+      if(next !== Number(currentSurahNumber)) goToSurah(String(next));
+    }
+    function prevSurah(){
+      if(!currentSurahNumber) return;
+      const prev = Math.max(1, Number(currentSurahNumber) - 1);
+      if(prev !== Number(currentSurahNumber)) goToSurah(String(prev));
+    }
+
     function loadBookmarks(){
       try { return JSON.parse(localStorage.getItem(KEY_BOOKMARKS) || "[]"); }
       catch { return []; }
@@ -552,6 +596,7 @@
       else b.unshift({ surah, ayah, label, ts: Date.now() });
       saveBookmarks(b);
     }
+
     function openDrawer(){ renderBookmarks(); drawerOverlay.classList.add("show"); }
     function closeDrawer(){ drawerOverlay.classList.remove("show"); }
     closeDrawerBtn.addEventListener("click", closeDrawer);
@@ -582,7 +627,7 @@
           closeDrawer();
           await goToSurah(item.surah);
           const target = document.querySelector(`[data-ayah="${item.ayah}"]`);
-          if(target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+          if(target) target.scrollIntoView({ behavior:"smooth", block:"start" });
         });
 
         const delBtn = document.createElement("button");
@@ -603,74 +648,34 @@
       });
     }
 
-    // --- Theme ---
-    function initTheme(){
-      const saved = localStorage.getItem(KEY_THEME);
-      if(saved === "dark") document.body.classList.add("dark");
-      darkToggle.addEventListener("click", () => {
-        document.body.classList.toggle("dark");
-        localStorage.setItem(KEY_THEME, document.body.classList.contains("dark") ? "dark" : "light");
-      });
-    }
+    function openSettings(){ syncSettingsUI(); settingsOverlay.classList.add("show"); }
+    function closeSettings(){ settingsOverlay.classList.remove("show"); }
+    settingsBtn.addEventListener("click", openSettings);
+    closeSettingsBtn.addEventListener("click", closeSettings);
+    settingsOverlay.addEventListener("click", (e)=>{ if(e.target===settingsOverlay) closeSettings(); });
 
-    // --- Mode persistence ---
-    function initMode(){
-      const savedMode = localStorage.getItem(KEY_MODE);
-      // If there is a saved mode, use it; otherwise use defaultMode from Settings
-      modeSelect.value = savedMode || settings.defaultMode || "all";
-      modeSelect.addEventListener("change", () => {
-        localStorage.setItem(KEY_MODE, modeSelect.value);
-        applyReadingMode(modeSelect.value);
-      });
-    }
+    setAutoResume.addEventListener("change", () => { settings.autoResume = setAutoResume.checked; applySettingsEverywhere(); });
+    setDefaultMode.addEventListener("change", () => { settings.defaultMode = setDefaultMode.value; applySettingsEverywhere(); });
+    setReciter.addEventListener("change", () => {
+      settings.reciter = setReciter.value;
+      applySettingsEverywhere();
+      audioInfo.textContent = "Reciter changed. Next play will use: " + setReciter.options[setReciter.selectedIndex].text;
+    });
+    setShowEnglish.addEventListener("change", () => { settings.showEnglish = setShowEnglish.checked; applySettingsEverywhere(); });
+    setShowMalayalam.addEventListener("change", () => { settings.showMalayalam = setShowMalayalam.checked; applySettingsEverywhere(); });
+    setShowTafsir.addEventListener("change", () => { settings.showTafsir = setShowTafsir.checked; applySettingsEverywhere(); });
+    setBgTheme.addEventListener("change", () => { settings.bgTheme = setBgTheme.value; applySettingsEverywhere(); });
 
-    // --- Swipe left/right to change surah ---
-    function initSwipe(){
-      let startX = null, startY = null;
-      const threshold = 55;
-      const restraint = 70;
-      const target = document.body;
+    resetResumePopup.addEventListener("click", () => {
+      localStorage.removeItem(KEY_NO_RESUME_POP);
+      setStatus("Resume popup reset. It can show again if Auto Resume is ON.");
+    });
 
-      target.addEventListener("touchstart", (e) => {
-        if(!e.touches || e.touches.length !== 1) return;
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-      }, { passive:true });
-
-      target.addEventListener("touchend", (e) => {
-        if(startX === null || startY === null) return;
-        const t = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0] : null;
-        if(!t) return;
-
-        const dx = t.clientX - startX;
-        const dy = t.clientY - startY;
-        startX = startY = null;
-
-        if(Math.abs(dx) < threshold) return;
-        if(Math.abs(dy) > restraint) return;
-
-        if(dx < 0) nextSurah();
-        else prevSurah();
-      }, { passive:true });
-    }
-    function nextSurah(){
-      if(!currentSurahNumber) return;
-      const next = Math.min(114, Number(currentSurahNumber) + 1);
-      if(next !== Number(currentSurahNumber)) goToSurah(String(next));
-    }
-    function prevSurah(){
-      if(!currentSurahNumber) return;
-      const prev = Math.max(1, Number(currentSurahNumber) - 1);
-      if(prev !== Number(currentSurahNumber)) goToSurah(String(prev));
-    }
-
-    // --- Audio: URL builder uses selected reciter ---
     function audioUrlForGlobalAyah(globalAyahNumber){
       const rec = settings.reciter || "ar.alafasy";
       return "https://cdn.islamic.network/quran/audio/128/" + rec + "/" + globalAyahNumber + ".mp3";
     }
 
-    // --- Mushaf text build ---
     function buildMushaf(arAyahs){
       mushafTextEl.innerHTML = "";
       const frag = document.createDocumentFragment();
@@ -683,13 +688,11 @@
         mark.className = "ayahMark";
         mark.textContent = a.numberInSurah;
         frag.appendChild(mark);
-
         frag.appendChild(document.createTextNode(" "));
       });
       mushafTextEl.appendChild(frag);
     }
 
-    // --- Playlist build + playback ---
     function buildPlaylist(arAyahs, surahNumber){
       const sName = surahList.find(x => String(x.number) === String(surahNumber))?.englishName || "";
       playlist = arAyahs.map(a => ({
@@ -699,6 +702,7 @@
         title: `Surah ${surahNumber} · Ayah ${a.numberInSurah} (${sName})`
       }));
     }
+
     function startPlaylistAtAyah(ayahInSurah){
       const idx = playlist.findIndex(p => p.ayahInSurah === ayahInSurah);
       if(idx < 0) return;
@@ -706,6 +710,7 @@
       playlistActive = true;
       playCurrent();
     }
+
     function saveLastPlayPoint(surahNumber, ayahInSurah){
       localStorage.setItem(KEY_LAST_PLAY, JSON.stringify({
         surah: String(surahNumber),
@@ -728,6 +733,7 @@
       resumeBtn.style.opacity = "1";
       resumeBtn.innerHTML = `<span class="icon">⏯</span><span>Resume (S${lp.surah} A${lp.ayahInSurah})</span>`;
     }
+
     function playCurrent(){
       if(!playlistActive || playlistIndex < 0 || playlistIndex >= playlist.length) return;
       const item = playlist[playlistIndex];
@@ -742,6 +748,7 @@
         audioInfo.textContent = "Ready: " + item.title + ". Tap play (iOS requires user action).";
       });
     }
+
     audioPlayer.addEventListener("ended", () => {
       if(!playlistActive) return;
       playlistIndex += 1;
@@ -753,14 +760,11 @@
       playCurrent();
     });
 
-    // --- Reading modes + show/hide toggles ---
     function applyReadingMode(mode){
-      // Mushaf container toggle
       const showMushaf = (mode === "mushaf");
       mushafWrap.classList.toggle("hidden", !showMushaf);
       versesEl.classList.toggle("hidden", showMushaf);
 
-      // Status helper if user selected a mode but disabled that content
       const blocked =
         (mode === "english" && !settings.showEnglish) ||
         (mode === "malayalam" && !settings.showMalayalam) ||
@@ -775,7 +779,6 @@
       if(!showMushaf){
         const showAll = mode === "all";
 
-        // Arabic is always allowed in UI (no toggle requested for Arabic)
         document.querySelectorAll(".ayahArabic").forEach(el =>
           el.classList.toggle("hidden", !(showAll || mode === "arabic"))
         );
@@ -801,7 +804,6 @@
       }
     }
 
-    // --- Auto resume popup control ---
     function shouldShowResumePopup(){
       if(!settings.autoResume) return false;
       const disabledByUser = localStorage.getItem(KEY_NO_RESUME_POP) === "1";
@@ -811,8 +813,7 @@
     function openResumePopup(){
       const lp = getLastPlayPoint();
       if(!lp) return;
-      resumePopupText.textContent =
-        `You last played Surah ${lp.surah}, Ayah ${lp.ayahInSurah}. Do you want to continue?`;
+      resumePopupText.textContent = `You last played Surah ${lp.surah}, Ayah ${lp.ayahInSurah}. Do you want to continue?`;
       resumePopup.classList.add("show");
     }
     function closeResumePopup(){ resumePopup.classList.remove("show"); }
@@ -823,54 +824,17 @@
       localStorage.setItem(KEY_NO_RESUME_POP, "1");
       closeResumePopup();
     });
-    resumePopupResume.addEventListener("click", async () => {
-      closeResumePopup();
-      resumeBtn.click();
-    });
+    resumePopupResume.addEventListener("click", async () => { closeResumePopup(); resumeBtn.click(); });
     resumePopupStart.addEventListener("click", async () => {
       closeResumePopup();
       const lp = getLastPlayPoint();
       if(!lp) return;
-      if(String(currentSurahNumber) !== String(lp.surah)){
-        await goToSurah(String(lp.surah));
-      }
+      if(String(currentSurahNumber) !== String(lp.surah)) await goToSurah(String(lp.surah));
       startPlaylistAtAyah(1);
       const target = document.querySelector(`[data-ayah="1"]`);
       if(target) target.scrollIntoView({ behavior:"smooth", block:"start" });
     });
 
-    // --- Settings drawer open/close + events ---
-    function openSettings(){
-      syncSettingsUI();
-      settingsOverlay.classList.add("show");
-    }
-    function closeSettings(){
-      settingsOverlay.classList.remove("show");
-    }
-    settingsBtn.addEventListener("click", openSettings);
-    closeSettingsBtn.addEventListener("click", closeSettings);
-    settingsOverlay.addEventListener("click", (e)=>{ if(e.target===settingsOverlay) closeSettings(); });
-
-    setAutoResume.addEventListener("change", () => { settings.autoResume = setAutoResume.checked; applySettingsEverywhere(); });
-    setDefaultMode.addEventListener("change", () => { settings.defaultMode = setDefaultMode.value; applySettingsEverywhere(); });
-    setReciter.addEventListener("change", () => {
-      settings.reciter = setReciter.value;
-      applySettingsEverywhere();
-      // If currently playing/paused, keep position but update next play URL:
-      // (We won't force restart audio automatically)
-      audioInfo.textContent = "Reciter changed. Next play will use: " + setReciter.options[setReciter.selectedIndex].text;
-    });
-    setShowEnglish.addEventListener("change", () => { settings.showEnglish = setShowEnglish.checked; applySettingsEverywhere(); });
-    setShowMalayalam.addEventListener("change", () => { settings.showMalayalam = setShowMalayalam.checked; applySettingsEverywhere(); });
-    setShowTafsir.addEventListener("change", () => { settings.showTafsir = setShowTafsir.checked; applySettingsEverywhere(); });
-    setBgTheme.addEventListener("change", () => { settings.bgTheme = setBgTheme.value; applySettingsEverywhere(); });
-
-    resetResumePopup.addEventListener("click", () => {
-      localStorage.removeItem(KEY_NO_RESUME_POP);
-      setStatus("Resume popup reset. It can show again if Auto Resume is ON.");
-    });
-
-    // --- Surah list + fetching ---
     async function fetchSurahList(){
       try{
         setStatus("Loading surahs...");
@@ -891,9 +855,8 @@
         setStatus("Surahs loaded.");
 
         const last = localStorage.getItem(KEY_LAST_SURAH);
-        if(last){
-          await goToSurah(last);
-        }
+        if(last) await goToSurah(last);
+
       } catch(err){
         console.error(err);
         setStatus("Could not load surah list. Check internet.");
@@ -989,6 +952,7 @@
           const bmBtn = document.createElement("button");
           bmBtn.className = "mini";
           const label = `${english.englishName} · ${arabic.name}`;
+
           const refreshBmIcon = () => {
             const saved = isBookmarked(String(surahNumber), ar.numberInSurah);
             bmBtn.innerHTML = saved
@@ -1061,7 +1025,6 @@
       }
     }
 
-    // Buttons
     playFullBtn.addEventListener("click", () => {
       if(!currentSurahNumber || playlist.length === 0) return;
       startPlaylistAtAyah(1);
@@ -1075,11 +1038,11 @@
         await goToSurah(String(lp.surah));
       }
       startPlaylistAtAyah(Number(lp.ayahInSurah));
+
       const target = document.querySelector(`[data-ayah="${lp.ayahInSurah}"]`);
       if(target) target.scrollIntoView({ behavior:"smooth", block:"start" });
     });
 
-    // Surah change
     surahSelect.addEventListener("change", (e) => {
       const v = e.target.value;
       if(!v){
@@ -1093,27 +1056,21 @@
       fetchSurahDetails(v);
     });
 
-    // Bookmarks open
     bookmarksBtn.addEventListener("click", openDrawer);
 
-    // Init
     document.addEventListener("DOMContentLoaded", async () => {
-      // Apply settings first (background/theme)
       applyBgTheme();
       syncSettingsUI();
 
       initTheme();
       initMode();
       initSwipe();
-
       updateResumeButton();
 
       await fetchSurahList();
 
-      // Apply mode + settings visibility after load
       applyReadingMode(modeSelect.value);
 
-      // Auto resume popup (if enabled)
       if(shouldShowResumePopup()){
         setTimeout(openResumePopup, 350);
       }
